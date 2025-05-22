@@ -25,6 +25,14 @@ export const createTransaction = async (transaction: any) => {
   return res.json();
 };
 
+
+export const fetchProducts = async () => {
+  const res = await fetch(`${BACKEND_URL}/products`);
+  if (!res.ok) throw new Error('No se pudo cargar la lista de productos');
+  return res.json();
+};
+
+
 export const updateStock = async (productId: string, quantity: number) => {
   const res = await fetch(`${BACKEND_URL}/products/${productId}/stock`, {
     method: 'PATCH',
@@ -44,3 +52,5 @@ export const updateStock = async (productId: string, quantity: number) => {
 
   return res.json();
 };
+
+

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProductList from '../features/products/ProductList';
 import CartSummary from '../features/cart/CartSummary';
 import TransactionResult from '../features/transaction/TransactionResult';
+import Header from '../components/Header';
 
 const AppRouter: React.FC = () => (
   <BrowserRouter>
@@ -12,10 +13,12 @@ const AppRouter: React.FC = () => (
       <Route
         path="/"
         element={
-          <div className="min-h-screen bg-gray-100 p-4">
-            <h1 className="text-3xl font-bold text-center mb-6">SnapBuy</h1>
-            <ProductList />
-            <CartSummary />
+          <div className="min-h-screen bg-gray-100">
+            <Header />
+            <main className="p-4">
+              <ProductList />
+              <CartSummary />
+            </main>
           </div>
         }
       />
@@ -23,7 +26,7 @@ const AppRouter: React.FC = () => (
       {/* Ruta de resultado de transacción */}
       <Route path="/result" element={<TransactionResult />} />
 
-      {/* Cualquier otra ruta redirige a "/" */}
+      {/* Redirección por defecto */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   </BrowserRouter>
