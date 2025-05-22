@@ -35,27 +35,46 @@ export const usePayment = () => {
       setLoading(true);
       dispatch(startTransaction());
 
-      // 1) Crear transacción en tu backend
-      const backendTx = await createTransaction({
-        productId: data.productId,
-        status: 'PENDING',
+      // 1) Crear el cliente en tu backend
+      const customerRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/customers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: data.name, address: data.address, email: data.email }),
       });
+      const customer = await customerRes.json();
 
-      // 2) Llamar a Wompi Sandbox
+      // 2) Crear entrega
+      const deliveryRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/deliveries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: customer.id, address: data.address }),
+      });
+      const delivery = await deliveryRes.json();
+
+      // 3) Simulación de pago en Wompi
       const wompiRes = await payWithCard({
         amountInCents: data.amountInCents,
         currency: 'COP',
         customerEmail: data.email,
-        reference: backendTx.reference || `ref-${Date.now()}`,
+        reference: `ref-${Date.now()}`,
       });
 
-      // 3) Si aprobado, actualizar stock y marcar éxito
+      // 4) Si el pago es aprobado, crear la transacción y actualizar stock
       if (wompiRes.status === 'APPROVED') {
+        await createTransaction({
+          customerId: customer.id,
+          deliveryId: delivery.id,
+          productId: data.productId,
+          quantity: data.quantity,
+          amount: data.amountInCents,
+          status: 'APPROVED',
+        });
+
         await updateStock(data.productId, data.quantity);
         dispatch(setTransactionSuccess({ id: wompiRes.id }));
         navigate('/result');
       } else {
-        dispatch(setTransactionFailed({ message: 'Pago rechazado' }));
+        dispatch(setTransactionFailed({ message: 'Pago rechazado por Wompi' }));
         setError('Pago rechazado por Wompi');
         navigate('/result');
       }
