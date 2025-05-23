@@ -17,6 +17,8 @@ const transactionSlice = createSlice({
   reducers: {
     startTransaction(state) {
       state.status = 'pending';
+      state.transactionId = undefined;  
+      state.message = undefined;        
     },
     setTransactionSuccess(state, action: PayloadAction<{ id: string }>) {
       state.status = 'success';

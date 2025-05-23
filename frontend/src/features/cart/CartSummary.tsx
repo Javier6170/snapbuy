@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../app/store';
-import PaymentModal from '../../components/PaymentModal';
 import visa from '../../assets/visa.svg';
 import mastercard from '../../assets/mastercard.svg';
 import amex from '../../assets/americanexpress.svg';
@@ -10,8 +9,11 @@ import amex from '../../assets/americanexpress.svg';
 const BASE_FEE = Number(process.env.REACT_APP_BASE_FEE || 3000);
 const DELIVERY_FEE = Number(process.env.REACT_APP_DELIVERY_FEE || 5000);
 
-const CartSummary: React.FC = () => {
-  const [showModal, setShowModal] = useState(false);
+interface CartSummaryProps {
+  onNext: () => void;
+}
+
+const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
   const [accepted, setAccepted] = useState(false);
 
   const product = useSelector((state: RootState) =>
@@ -28,7 +30,9 @@ const CartSummary: React.FC = () => {
 
   return (
     <div className="p-6 max-w-2xl mx-auto bg-white rounded-2xl shadow-xl mt-8">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Resumen de tu compra</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+        Resumen de tu compra
+      </h2>
 
       <div className="mb-6 space-y-3">
         <div className="flex justify-between text-gray-700">
@@ -66,19 +70,25 @@ const CartSummary: React.FC = () => {
             onChange={() => setAccepted(!accepted)}
           />
           <span className="text-sm text-gray-600">
-            Acepto los <a href="#" className="text-blue-600 underline">términos y condiciones</a>.
+            Acepto los{' '}
+            <a href="#" className="text-blue-600 underline">
+              términos y condiciones
+            </a>
+            .
           </span>
         </label>
       </div>
 
       <button
-        onClick={() => setShowModal(true)}
+        onClick={onNext}
         disabled={!accepted}
         className={`mt-4 w-full py-3 px-6 text-white rounded-lg transition duration-200 shadow-md ${
-          accepted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'
+          accepted
+            ? 'bg-blue-600 hover:bg-blue-700'
+            : 'bg-gray-300 cursor-not-allowed'
         }`}
       >
-        Proceder al pago
+        Continuar al formulario de entrega
       </button>
 
       <div className="mt-6">
@@ -89,8 +99,6 @@ const CartSummary: React.FC = () => {
           <img src={amex} alt="Amex" className="h-6" />
         </div>
       </div>
-
-      {showModal && <PaymentModal onClose={() => setShowModal(false)} />}
     </div>
   );
 };

@@ -1,61 +1,57 @@
 // src/features/transaction/TransactionResult.tsx
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { RootState } from '../../app/store';
-import {
-  resetTransaction
-} from './transactionSlice';
+import React, { useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import type { RootState } from '../../app/store'
+import { resetTransaction } from './transactionSlice'
+import { clearCart } from '../cart/cartSlice'   // ← importa
 
-const TransactionResult: React.FC = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { status, transactionId, message } = useSelector(
-    (state: RootState) => state.transaction
-  );
+interface TransactionResultProps {
+  onRestart?: () => void
+}
 
-  // Si el usuario llega aquí sin haber iniciado transacción, lo mandamos al home
+const TransactionResult: React.FC<TransactionResultProps> = ({ onRestart }) => {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { status, transactionId, message } = useSelector((s: RootState) => s.transaction)
+
   useEffect(() => {
     if (status === 'idle' || status === 'pending') {
-      navigate('/', { replace: true });
+      navigate('/', { replace: true })
     }
-  }, [status, navigate]);
+  }, [status, navigate])
 
-  const handleBackHome = () => {
-    dispatch(resetTransaction());
-    navigate('/', { replace: true });
-  };
+  const backHome = () => {
+    dispatch(resetTransaction())
+    dispatch(clearCart())           // ← limpia el carrito
+    if (onRestart) onRestart()
+    else navigate('/', { replace: true })
+  }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100 p-4">
-      {status === 'success' ? (
-        <div className="bg-white p-6 rounded-lg shadow-md max-w-sm text-center">
-          <h2 className="text-2xl font-bold mb-4 text-green-600">¡Pago exitoso!</h2>
-          <p className="mb-2">Tu transacción fue aprobada.</p>
-          <p className="mb-4">
-            <strong>ID de transacción:</strong> {transactionId}
-          </p>
-          <button
-            onClick={handleBackHome}
-            className="btn-primary px-6 py-2"
-          >
-            Volver al inicio
-          </button>
-        </div>
-      ) : (
-        <div className="bg-white p-6 rounded-lg shadow-md max-w-sm text-center">
-          <h2 className="text-2xl font-bold mb-4 text-red-600">Pago fallido</h2>
-          <p className="mb-4">{message || 'Hubo un error al procesar tu pago.'}</p>
-          <button
-            onClick={handleBackHome}
-            className="btn-secondary px-6 py-2"
-          >
-            Intentar de nuevo
-          </button>
-        </div>
-      )}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white p-6 rounded-lg shadow-md max-w-sm text-center space-y-4">
+        {status === 'success' ? (
+          <>
+            <h2 className="text-2xl font-bold text-green-600">¡Pago exitoso!</h2>
+            <p>Tu transacción fue aprobada.</p>
+            <p><strong>ID:</strong> {transactionId}</p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-bold text-red-600">Pago fallido</h2>
+            <p>{message || 'Hubo un error al procesar tu pago.'}</p>
+          </>
+        )}
+        <button
+          onClick={backHome}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Volver al inicio
+        </button>
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default TransactionResult;
+export default TransactionResult

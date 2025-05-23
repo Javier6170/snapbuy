@@ -67,17 +67,22 @@ export const usePayment = () => {
       });
 
       if (!paymentRes.ok) {
-        const errText = await paymentRes.text();
-        throw new Error(errText);
+        // Parseamos JSON con { message, details: { error: { messages: { number: [...] } } } }
+        const errBody = await paymentRes.json();
+        const msgs = errBody.details?.error?.messages;
+        const userMsg = msgs
+          ? Object.values(msgs).flat().join(', ')
+          : errBody.message || 'Error desconocido';
+        throw new Error(userMsg);
       }
 
       const payment = await paymentRes.json();
       dispatch(setTransactionSuccess({ id: payment.transactionId }));
-      navigate('/result');
+      return true;
     } catch (err: any) {
-      dispatch(setTransactionFailed({ message: err.message }));
+       dispatch(setTransactionFailed({ message: err.message }));
       setError(err.message);
-      navigate('/result');
+      return false;
     } finally {
       setLoading(false);
     }

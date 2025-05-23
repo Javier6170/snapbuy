@@ -1,5 +1,6 @@
+// src/wompi/wompi.service.ts
+import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
@@ -16,89 +17,136 @@ export class WompiService {
     private readonly httpService: HttpService,
     private readonly config: ConfigService,
   ) {
-    this.apiUrl = this.config.get<string>('WOMPI_API') || 'https://api-sandbox.co.uat.wompi.dev/v1';
-    this.privateKey = this.config.getOrThrow<string>('WOMPI_PRIVATE_KEY');
-    this.publicKey = this.config.getOrThrow<string>('WOMPI_PUBLIC_KEY');
-    this.integrityKey = this.config.getOrThrow<string>('WOMPI_INTEGRITY_KEY');
+    this.apiUrl =
+      this.config.get<string>('WOMPI_API') ||
+      'https://api-sandbox.co.uat.wompi.dev/v1';
+    this.privateKey = this.config.getOrThrow<string>(
+      'WOMPI_PRIVATE_KEY',
+    );
+    this.publicKey = this.config.getOrThrow<string>(
+      'WOMPI_PUBLIC_KEY',
+    );
+    this.integrityKey = this.config.getOrThrow<string>(
+      'WOMPI_INTEGRITY_KEY',
+    );
 
     this.logger.log(`WOMPI_API = ${this.apiUrl}`);
-    this.logger.log(`WOMPI_PRIVATE_KEY = ${this.privateKey.slice(0, 6)}...`);
-    this.logger.log(`WOMPI_PUBLIC_KEY = ${this.publicKey.slice(0, 6)}...`);
+    this.logger.log(
+      `WOMPI_PRIVATE_KEY = ${this.privateKey.slice(0, 6)}...`,
+    );
+    this.logger.log(
+      `WOMPI_PUBLIC_KEY = ${this.publicKey.slice(0, 6)}...`,
+    );
   }
 
   async getAcceptanceToken(): Promise<string> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get(`${this.apiUrl}/merchants/${this.publicKey}`),
+        this.httpService.get(
+          `${this.apiUrl}/merchants/${this.publicKey}`,
+        ),
       );
-      const token = response.data?.data?.presigned_acceptance?.acceptance_token;
+      const token =
+        response.data?.data?.presigned_acceptance
+          ?.acceptance_token;
+      if (!token) {
+        throw new Error('No vino acceptance_token en la respuesta');
+      }
       this.logger.log(`Acceptance token obtenido: ${token}`);
       return token;
     } catch (err: any) {
-      this.logger.error(`Error al obtener acceptance_token: ${err.message}`);
-      if (err?.response?.data) {
-        this.logger.error(`Detalles: ${JSON.stringify(err.response.data)}`);
-      }
-      throw new Error('No se pudo obtener el acceptance_token');
+      const status =
+        err.response?.status || HttpStatus.BAD_GATEWAY;
+      const details = err.response?.data || err.message;
+      this.logger.error(
+        `Error al obtener acceptance_token:`,
+        details,
+      );
+      throw new HttpException(
+        {
+          message: 'No se pudo obtener el acceptance_token',
+          details,
+        },
+        status,
+      );
     }
   }
 
-  async tokenizeCard({
-    number,
-    cvc,
-    exp_month,
-    exp_year,
-    card_holder,
-  }: {
+  async tokenizeCard(params: {
     number: string;
     cvc: string;
     exp_month: string;
     exp_year: string;
     card_holder: string;
   }): Promise<string> {
+    const { number, cvc, exp_month, exp_year, card_holder } =
+      params;
     const payload = { number, cvc, exp_month, exp_year, card_holder };
+
     this.logger.log(`Tokenizando tarjeta para: ${card_holder}`);
-    this.logger.log(`Payload: ${JSON.stringify(payload)}`);
+    this.logger.debug(`Payload: ${JSON.stringify(payload)}`);
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.apiUrl}/tokens/cards`, payload, {
-          headers: {
-            Authorization: `Bearer ${this.publicKey}`,
-            'Content-Type': 'application/json',
+        this.httpService.post(
+          `${this.apiUrl}/tokens/cards`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${this.publicKey}`,
+              'Content-Type': 'application/json',
+            },
           },
-        }),
+        ),
       );
       const token = response.data?.data?.id;
+      if (!token) {
+        throw new Error('No vino id de token en la respuesta');
+      }
       this.logger.log(`Token generado: ${token}`);
       return token;
     } catch (err: any) {
-      this.logger.error(`Error al tokenizar tarjeta: ${err.message}`);
-      if (err?.response?.data) {
-        this.logger.error(`Detalles del error: ${JSON.stringify(err.response.data)}`);
-      }
-      throw new Error('No se pudo tokenizar la tarjeta');
+      const status =
+        err.response?.status === 422
+          ? HttpStatus.UNPROCESSABLE_ENTITY
+          : HttpStatus.BAD_REQUEST;
+      const details = err.response?.data || err.message;
+      this.logger.error(
+        `Error al tokenizar tarjeta:`,
+        details,
+      );
+      throw new HttpException(
+        {
+          message: 'No se pudo tokenizar la tarjeta',
+          details,
+        },
+        status,
+      );
     }
   }
 
-  async payWithCard({
-    amountInCents,
-    customerEmail,
-    reference,
-    token,
-    installments,
-  }: {
+  async payWithCard(options: {
     amountInCents: number;
     customerEmail: string;
     reference: string;
     token: string;
     installments: number;
-  }) {
+  }): Promise<any> {
+    const {
+      amountInCents,
+      customerEmail,
+      reference,
+      token,
+      installments,
+    } = options;
+
     const acceptanceToken = await this.getAcceptanceToken();
 
-    // Firma de integridad con orden correcto: reference + amount + currency + integrityKey
     const rawSignature = `${reference}${amountInCents}COP${this.integrityKey}`;
-    const signature = crypto.createHash('sha256').update(rawSignature).digest('hex');
+    const signature = crypto
+      .createHash('sha256')
+      .update(rawSignature)
+      .digest('hex');
     this.logger.log(`Firma SHA256 generada: ${signature}`);
 
     const payload = {
@@ -116,37 +164,73 @@ export class WompiService {
       },
     };
 
-    this.logger.log(`Payload enviado a Wompi: ${JSON.stringify(payload)}`);
-    this.logger.log(`Usando endpoint: ${this.apiUrl}/transactions`);
+    this.logger.log(`Enviando transacción a Wompi`);
+    this.logger.debug(`Payload: ${JSON.stringify(payload)}`);
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post(`${this.apiUrl}/transactions`, payload, {
-          headers: {
-            Authorization: `Bearer ${this.privateKey}`,
-            'Content-Type': 'application/json',
+        this.httpService.post(
+          `${this.apiUrl}/transactions`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${this.privateKey}`,
+              'Content-Type': 'application/json',
+            },
           },
-        }),
+        ),
       );
-
       return response.data;
     } catch (err: any) {
-      this.logger.error(`Error al crear la transacción: ${err.message}`);
-      if (err?.response?.data) {
-        this.logger.error(`Detalles del error: ${JSON.stringify(err.response.data)}`);
-      }
-      throw new Error('No se pudo procesar el pago con Wompi');
+      const status =
+        err.response?.status || HttpStatus.BAD_REQUEST;
+      const details = err.response?.data || err.message;
+      this.logger.error(
+        `Error al crear la transacción:`,
+        details,
+      );
+      throw new HttpException(
+        {
+          message: 'No se pudo procesar el pago con Wompi',
+          details,
+        },
+        status,
+      );
     }
   }
 
-  async getTransactionStatus(transactionId: string): Promise<'APPROVED' | 'DECLINED' | 'PENDING' | 'VOIDED' | 'ERROR'> {
-    const response = await firstValueFrom(
-      this.httpService.get(`${this.apiUrl}/transactions/${transactionId}`, {
-        headers: {
-          Authorization: `Bearer ${this.privateKey}`,
+  async getTransactionStatus(
+    transactionId: string,
+  ): Promise<
+    'APPROVED' | 'DECLINED' | 'PENDING' | 'VOIDED' | 'ERROR'
+  > {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.apiUrl}/transactions/${transactionId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.privateKey}`,
+            },
+          },
+        ),
+      );
+      return response.data?.data?.status;
+    } catch (err: any) {
+      const status =
+        err.response?.status || HttpStatus.BAD_GATEWAY;
+      const details = err.response?.data || err.message;
+      this.logger.error(
+        `Error al consultar estado de transacción:`,
+        details,
+      );
+      throw new HttpException(
+        {
+          message: 'No se pudo obtener estado de la transacción',
+          details,
         },
-      }),
-    );
-    return response.data?.data?.status;
+        status,
+      );
+    }
   }
 }
