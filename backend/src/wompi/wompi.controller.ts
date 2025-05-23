@@ -1,7 +1,9 @@
 import { Controller, Post, Headers, Body, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+import { ApiTags, ApiOperation, ApiHeader, ApiResponse, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('Wompi Webhooks')
 @Controller('wompi')
 export class WompiController {
   private readonly logger = new Logger(WompiController.name);
@@ -12,6 +14,16 @@ export class WompiController {
   }
 
   @Post('events')
+  @ApiOperation({ summary: 'Recibe eventos de Wompi' })
+  @ApiHeader({
+    name: 'x-integrity',
+    description: 'Hash SHA256 HMAC del payload',
+    required: true,
+    schema: { type: 'string', example: '37c8407747e595535433ef8f6a811d853cd943046624a0ec04662b17bbf33bf5' },
+  })
+  @ApiBody({ description: 'Payload que envía Wompi en el webhook', schema: { type: 'object' } })
+  @ApiResponse({ status: 200, description: 'Evento procesado correctamente', schema: { example: { received: true } } })
+  @ApiResponse({ status: 400, description: 'Firma no válida' })
   async handleWebhook(
     @Body() body: any,
     @Headers('x-integrity') receivedHash: string,
@@ -27,10 +39,7 @@ export class WompiController {
       throw new BadRequestException('Firma no válida');
     }
 
-    // Aquí puedes procesar el evento de Wompi
     this.logger.log(`Evento recibido de Wompi: ${JSON.stringify(body)}`);
-
-    // Puedes usar body.transaction.id y body.event para actualizar tu base de datos
     return { received: true };
   }
 }
