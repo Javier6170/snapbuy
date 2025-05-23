@@ -2,8 +2,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { createTransaction, updateStock } from '../services/api';
-import { payWithCard } from '../services/wompiService';
 import {
   startTransaction,
   setTransactionSuccess,
@@ -35,49 +33,47 @@ export const usePayment = () => {
       setLoading(true);
       dispatch(startTransaction());
 
-      // 1) Crear el cliente en tu backend
+      // 1) Crear cliente
       const customerRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/customers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: data.name, address: data.address, email: data.email }),
+        body: JSON.stringify({
+          name: data.name,
+          address: data.address,
+          email: data.email,
+        }),
       });
+
       const customer = await customerRes.json();
 
-      // 2) Crear entrega
-      const deliveryRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/deliveries`, {
+      // 2) Hacer pago completo desde backend
+      const paymentRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/payments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId: customer.id, address: data.address }),
-      });
-      const delivery = await deliveryRes.json();
-
-      // 3) Simulación de pago en Wompi
-      const wompiRes = await payWithCard({
-        amountInCents: data.amountInCents,
-        currency: 'COP',
-        customerEmail: data.email,
-        reference: `ref-${Date.now()}`,
-      });
-
-      // 4) Si el pago es aprobado, crear la transacción y actualizar stock
-      if (wompiRes.status === 'APPROVED') {
-        await createTransaction({
+        body: JSON.stringify({
           customerId: customer.id,
-          deliveryId: delivery.id,
           productId: data.productId,
           quantity: data.quantity,
-          amount: data.amountInCents,
-          status: 'APPROVED',
-        });
+          amountInCents: data.amountInCents,
+          customerEmail: data.email,
 
-        await updateStock(data.productId, data.quantity);
-        dispatch(setTransactionSuccess({ id: wompiRes.id }));
-        navigate('/result');
-      } else {
-        dispatch(setTransactionFailed({ message: 'Pago rechazado por Wompi' }));
-        setError('Pago rechazado por Wompi');
-        navigate('/result');
+          // 👇 Datos de tarjeta para tokenizar
+          cardNumber: data.cardNumber,
+          cvc: data.cvc,
+          expMonth: data.expMonth,
+          expYear: data.expYear,
+          name: data.name,
+        }),
+      });
+
+      if (!paymentRes.ok) {
+        const errText = await paymentRes.text();
+        throw new Error(errText);
       }
+
+      const payment = await paymentRes.json();
+      dispatch(setTransactionSuccess({ id: payment.transactionId }));
+      navigate('/result');
     } catch (err: any) {
       dispatch(setTransactionFailed({ message: err.message }));
       setError(err.message);
