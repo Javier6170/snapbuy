@@ -3,20 +3,64 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  // 1. Crear la aplicación Nest
   const app = await NestFactory.create(AppModule);
 
-  // Permitir peticiones desde el frontend
+  // 2. Configurar CORS para el frontend React
   app.enableCors({
-    origin: ['http://localhost:3000'], // frontend ejecutándose en 3000
+    origin: ['http://localhost:3000'],
     credentials: true,
   });
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
+  // 3. Validaciones globales: 
+  //    - whitelist: elimina cualquier propiedad no decorada en los DTOs
+  //    - forbidNonWhitelisted: arroja error si llegan propiedades extra
+  app.useGlobalPipes(
+    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })
+  );
+
+  // 4. Filtros e interceptores globales
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new LoggingInterceptor());
 
-  await app.listen(process.env.PORT || 4000); // asegúrate de que sea el puerto correcto
+  // 5. Prefijo global para todas las rutas de la API
+  app.setGlobalPrefix('api');
+
+  // 6. Configuración de Swagger
+const swaggerConfig = new DocumentBuilder()
+  .setTitle('SnapBuy API')
+  .setDescription('API de SnapBuy para gestión de productos, pagos y entregas')
+  .setVersion('1.0')
+  // Servidores
+  .addServer('http://localhost:4000/api', 'Local (dev)')
+  .addServer('en proceso...', 'Producción')
+  // Contacto
+  .setContact(
+    'Javier Rodriguez Marulanda',
+    'https://github.com/Javier6170/snapbuy',
+    'javierrodriguezmarulanda@gmail.com',
+  )
+  // Tags con descripción
+  .addTag('products',     'Gestión de productos (CRUD, stock, imágenes)')
+  .addTag('transactions', 'Crear/actualizar transacciones')
+  .addTag('payments',     'Endpoints de pago (tokenización, transacciones)')
+  .addTag('deliveries',   'Registro y actualización de entregas')
+  .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+  // 7. Montar Swagger UI en /api/docs
+  SwaggerModule.setup('docs', app, document);
+
+  // 8. Levantar el servidor
+  const port = process.env.PORT || 4000;
+  await app.listen(port);
+
+  console.log(`> Server escuchando en http://localhost:${port}`);
+  console.log(`> Swagger UI disponible en http://localhost:${port}/docs`);
 }
+
 bootstrap();
