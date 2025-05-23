@@ -18,16 +18,15 @@ const schema = yup.object({
   cardNumber: yup
     .string()
     .required('Número de tarjeta requerido')
-    .matches(/^[0-9]{0,16}$/, 'Solo dígitos')
-    .min(16, 'Debe tener 16 dígitos'),
+    .matches(/^[0-9]{16}$/, 'Debe tener 16 dígitos'),
   expMonth: yup
     .string()
     .required('Mes requerido')
-    .matches(/^(0[1-9]|1[0-2])$/, 'MM inválido'),
+    .matches(/^(0[1-9]|1[0-2])$/, 'Mes inválido'),
   expYear: yup
     .string()
     .required('Año requerido')
-    .matches(/^[0-9]{2}$/, 'YY inválido'),
+    .matches(/^[0-9]{2}$/, 'Año inválido'),
   cvc: yup
     .string()
     .required('CVC requerido')
@@ -45,21 +44,31 @@ interface PaymentFormProps {
 }
 
 const detectBrand = (num: string) => {
-  if (/^4/.test(num)) return 'visa'
+  if (/^4/.test(num))     return 'visa'
   if (/^5[1-5]/.test(num)) return 'mastercard'
-  if (/^3[47]/.test(num)) return 'amex'
+  if (/^3[47]/.test(num))  return 'amex'
   return null
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
   const dispatch = useDispatch()
   const { handlePayment, loading, error } = usePayment()
-  const product  = useSelector((s: RootState) => s.products.items.find(p => p.id === s.cart.productId))!
-  const quantity = useSelector((s: RootState) => s.cart.quantity)
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
-    resolver: yupResolver(schema),
-  })
+  // Tomamos el primer item del array
+  const cartItems = useSelector((s: RootState) => s.cart.items)
+  if (cartItems.length === 0) throw new Error('Carrito vacío')
+  const { productId, quantity } = cartItems[0]
+
+  const product = useSelector((s:RootState) =>
+    s.products.items.find(p => p.id === productId)!
+  )
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors }
+  } = useForm<FormData>({ resolver: yupResolver(schema) })
 
   const cardNumber = watch('cardNumber') ?? ''
   const brand = detectBrand(cardNumber)
@@ -78,7 +87,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
       name:          data.name,
       address:       data.address,
       email:         data.email,
-      productId:     product.id,
+      productId,
       quantity,
       amountInCents: product.price * quantity + BASE_FEE + DELIVERY_FEE,
     }).finally(onNext)
@@ -89,7 +98,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <h2 className="text-xl font-semibold">2. Datos de pago</h2>
+      <h2 className="text-xl font-semibold">3. Pago con tarjeta</h2>
 
       <div className="flex gap-4 mb-4">
         <img src={visaLogo}       alt="Visa"       className={iconClass('visa')} />
@@ -97,86 +106,55 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
         <img src={amexLogo}       alt="Amex"       className={iconClass('amex')} />
       </div>
 
+      {/* Número de tarjeta */}
       <div>
         <label className="block text-sm font-medium mb-1">Número de tarjeta</label>
         <input
           type="text"
           maxLength={16}
-          placeholder="1234 5678 9012 3456"
           {...register('cardNumber')}
           className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          placeholder="1234567812345678"
         />
         {errors.cardNumber && <p className="text-red-500 text-xs mt-1">{errors.cardNumber.message}</p>}
       </div>
 
+      {/* Mes, Año, CVC */}
       <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Mes</label>
-          <input
-            type="text"
-            maxLength={2}
-            placeholder="MM"
-            {...register('expMonth')}
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          {errors.expMonth && <p className="text-red-500 text-xs mt-1">{errors.expMonth.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Año</label>
-          <input
-            type="text"
-            maxLength={2}
-            placeholder="YY"
-            {...register('expYear')}
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          {errors.expYear && <p className="text-red-500 text-xs mt-1">{errors.expYear.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">CVC</label>
-          <input
-            type="text"
-            maxLength={4}
-            placeholder="123"
-            {...register('cvc')}
-            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          {errors.cvc && <p className="text-red-500 text-xs mt-1">{errors.cvc.message}</p>}
-        </div>
+        {['expMonth','expYear','cvc'].map((field, i) => (
+          <div key={field}>
+            <label className="block text-sm font-medium mb-1">
+              {field === 'expMonth' ? 'Mes' : field === 'expYear' ? 'Año' : 'CVC'}
+            </label>
+            <input
+              type="text"
+              maxLength={field==='cvc'?4:2}
+              {...register(field as keyof FormData)}
+              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+            {errors[field as keyof FormData] && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors[field as keyof FormData]?.message}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Nombre en tarjeta</label>
-        <input
-          type="text"
-          placeholder="Tu nombre"
-          {...register('name')}
-          className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-        />
-        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Dirección</label>
-        <input
-          type="text"
-          placeholder="Calle, ciudad"
-          {...register('address')}
-          className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-        />
-        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Correo electrónico</label>
-        <input
-          type="email"
-          placeholder="correo@ejemplo.com"
-          {...register('email')}
-          className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-        />
-        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-      </div>
+      {/* Nombre, Dirección, Email */}
+      {(['name','address','email'] as (keyof FormData)[]).map(key => (
+        <div key={key}>
+          <label className="block text-sm font-medium mb-1">
+            {key === 'name' ? 'Nombre en tarjeta' : key === 'address' ? 'Dirección' : 'Correo electrónico'}
+          </label>
+          <input
+            type={key==='email'?'email':'text'}
+            {...register(key)}
+            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          />
+          {errors[key] && <p className="text-red-500 text-xs mt-1">{errors[key]?.message}</p>}
+        </div>
+      ))}
 
       {error && <p className="text-center text-red-600">{error}</p>}
 
@@ -201,3 +179,4 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
 }
 
 export default PaymentForm
+  

@@ -1,30 +1,58 @@
-// features/cart/cartSlice.ts
+// src/features/cart/cartSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-interface CartItem {
+export interface CartItem {
   productId: string;
   quantity: number;
 }
 
-const initialState: CartItem = {
-  productId: '',
-  quantity: 0,
+interface CartState {
+  items: CartItem[];
+}
+
+const initialState: CartState = {
+  items: [],
 };
 
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
+    // Agrega cantidad: si ya existe, suma; si no, mete uno nuevo
     addToCart(state, action: PayloadAction<CartItem>) {
-      state.productId = action.payload.productId;
-      state.quantity = action.payload.quantity;
+      const { productId, quantity } = action.payload;
+      const existing = state.items.find(i => i.productId === productId);
+      if (existing) {
+        existing.quantity += quantity;
+      } else {
+        state.items.push({ productId, quantity });
+      }
     },
+    // Fija la cantidad exacta de un ítem
+    updateQuantity(
+      state,
+      action: PayloadAction<{ productId: string; quantity: number }>
+    ) {
+      const { productId, quantity } = action.payload;
+      const item = state.items.find(i => i.productId === productId);
+      if (item) item.quantity = quantity;
+    },
+    // Elimina un producto del carrito
+    removeFromCart(state, action: PayloadAction<{ productId: string }>) {
+      state.items = state.items.filter(i => i.productId !== action.payload.productId);
+    },
+    // Vacía todo el carrito
     clearCart(state) {
-      state.productId = '';
-      state.quantity = 0;
+      state.items = [];
     },
   },
 });
 
-export const { addToCart, clearCart } = cartSlice.actions;
+export const {
+  addToCart,
+  updateQuantity,
+  removeFromCart,
+  clearCart,
+} = cartSlice.actions;
+
 export default cartSlice.reducer;

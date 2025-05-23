@@ -1,40 +1,41 @@
 // src/components/Header.tsx
 import React, { useState } from 'react'
-import { useSelector, useDispatch } from 'react-redux' 
-import { useNavigate } from 'react-router-dom'        
-import { RootState } from '../app/store'
+import { useSelector, useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import type { RootState } from '../app/store'
+import { clearCart } from '../features/cart/cartSlice'
 import { setCheckoutStep } from '../features/checkout/checkoutSlice'
 import SideNav from './SideNav'
 
 const Header: React.FC = () => {
-  const quantity = useSelector((s: RootState) => s.cart.quantity)
+  const quantity = useSelector((s: RootState) => s.cart.items.reduce((sum, i) => sum + i.quantity, 0))
   const dispatch = useDispatch()
-  const navigate = useNavigate()                       
+  const navigate = useNavigate()
   const [cartOpen, setCartOpen] = useState(false)
 
   const openCart = () => {
-    dispatch(setCheckoutStep(1))
+    dispatch(setCheckoutStep(1))   // reset checkout step
     setCartOpen(true)
   }
 
   const goHome = () => {
-    dispatch(setCheckoutStep(1))
-    navigate('/')                                       
+    dispatch(clearCart())
+    navigate('/')                // navigate to products page
   }
-
- 
 
   return (
     <>
       <header className="bg-white shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
+          {/* Logo / title */}
           <h1
             className="text-2xl font-bold text-gray-800 cursor-pointer"
-            onClick={goHome}                        
+            onClick={goHome}
           >
             SnapBuy
           </h1>
 
+          {/* Cart button */}
           <button
             onClick={openCart}
             className="relative"
@@ -63,6 +64,7 @@ const Header: React.FC = () => {
         </div>
       </header>
 
+      {/* Slide-out cart panel */}
       <SideNav isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   )
