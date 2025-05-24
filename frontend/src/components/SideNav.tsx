@@ -105,7 +105,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose }) => {
             disabled={items.length === 0}
             className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            Finalizar compra
+            Pagar con tarjeta de credito
           </button>
         </footer>
 
