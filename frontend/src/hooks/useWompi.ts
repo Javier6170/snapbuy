@@ -1,4 +1,3 @@
-// src/hooks/usePayment.ts
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -16,9 +15,11 @@ interface UsePaymentInput {
   name: string;
   address: string;
   email: string;
-  productId: string;
-  quantity: number;
   amountInCents: number;
+  products: Array<{
+    productId: string;
+    quantity: number;
+  }>;
 }
 
 export const usePayment = () => {
@@ -52,22 +53,22 @@ export const usePayment = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: customer.id,
-          productId: data.productId,
-          quantity: data.quantity,
-          amountInCents: data.amountInCents,
           customerEmail: data.email,
+          amountInCents: data.amountInCents,
 
-          // 👇 Datos de tarjeta para tokenizar
+          // Datos de tarjeta
           cardNumber: data.cardNumber,
           cvc: data.cvc,
           expMonth: data.expMonth,
           expYear: data.expYear,
           name: data.name,
+
+          // Lista de productos
+          products: data.products,
         }),
       });
 
       if (!paymentRes.ok) {
-        // Parseamos JSON con { message, details: { error: { messages: { number: [...] } } } }
         const errBody = await paymentRes.json();
         const msgs = errBody.details?.error?.messages;
         const userMsg = msgs
@@ -80,7 +81,7 @@ export const usePayment = () => {
       dispatch(setTransactionSuccess({ id: payment.transactionId }));
       return true;
     } catch (err: any) {
-       dispatch(setTransactionFailed({ message: err.message }));
+      dispatch(setTransactionFailed({ message: err.message }));
       setError(err.message);
       return false;
     } finally {

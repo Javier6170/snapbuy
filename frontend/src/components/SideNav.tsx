@@ -10,6 +10,12 @@ interface SideNavProps {
   onClose: () => void
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  minimumFractionDigits: 0,
+});
+
 const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -75,11 +81,11 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose }) => {
                 <div className="flex-1">
                   <p className="font-medium">{it.name}</p>
                   <p className="text-sm text-gray-500">
-                    {it.quantity} × ${(it.price / 100).toFixed(2)}
+                    {it.quantity} × { currencyFormatter.format(it.price)}
                   </p>
                 </div>
                 <p className="font-semibold">
-                  ${( (it.price * it.quantity) / 100 ).toFixed(2)}
+                  { currencyFormatter.format( (it.price * it.quantity))}
                 </p>
               </div>
             ))
@@ -91,7 +97,7 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose }) => {
           <div className="flex justify-between mb-4">
             <span className="font-medium">Total:</span>
             <span className="font-bold">
-              ${(total / 100).toFixed(2)}
+              {currencyFormatter.format(total) }
             </span>
           </div>
           <button

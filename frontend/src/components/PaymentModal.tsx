@@ -1,4 +1,3 @@
-// src/features/payment/PaymentForm.tsx
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { useDispatch, useSelector } from 'react-redux'
@@ -44,9 +43,9 @@ interface PaymentFormProps {
 }
 
 const detectBrand = (num: string) => {
-  if (/^4/.test(num))     return 'visa'
+  if (/^4/.test(num)) return 'visa'
   if (/^5[1-5]/.test(num)) return 'mastercard'
-  if (/^3[47]/.test(num))  return 'amex'
+  if (/^3[47]/.test(num)) return 'amex'
   return null
 }
 
@@ -54,14 +53,25 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
   const dispatch = useDispatch()
   const { handlePayment, loading, error } = usePayment()
 
-  // Tomamos el primer item del array
   const cartItems = useSelector((s: RootState) => s.cart.items)
-  if (cartItems.length === 0) throw new Error('Carrito vacío')
-  const { productId, quantity } = cartItems[0]
+  const products  = useSelector((s: RootState) => s.products.items)
 
-  const product = useSelector((s:RootState) =>
-    s.products.items.find(p => p.id === productId)!
+  if (cartItems.length === 0) throw new Error('Carrito vacío')
+
+  const itemsWithDetails = cartItems
+    .map(ci => {
+      const product = products.find(p => p.id === ci.productId)
+      return product ? { ...product, quantity: ci.quantity } : null
+    })
+    .filter(Boolean) as Array<{ id: string, price: number, quantity: number }>
+
+  const subtotal = itemsWithDetails.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
   )
+
+  const totalInPesos = subtotal + BASE_FEE + DELIVERY_FEE
+  const amountInCents = totalInPesos * 100
 
   const {
     register,
@@ -79,17 +89,20 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
       address: data.address,
       email:   data.email,
     }))
+
     handlePayment({
-      cardNumber:    data.cardNumber,
-      expMonth:      data.expMonth,
-      expYear:       data.expYear,
-      cvc:           data.cvc,
-      name:          data.name,
-      address:       data.address,
-      email:         data.email,
-      productId,
-      quantity,
-      amountInCents: product.price * quantity + BASE_FEE + DELIVERY_FEE,
+      cardNumber: data.cardNumber,
+      expMonth:   data.expMonth,
+      expYear:    data.expYear,
+      cvc:        data.cvc,
+      name:       data.name,
+      address:    data.address,
+      email:      data.email,
+      amountInCents,
+      products: itemsWithDetails.map(item => ({
+        productId: item.id,
+        quantity: item.quantity,
+      })),
     }).finally(onNext)
   }
 
@@ -106,7 +119,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
         <img src={amexLogo}       alt="Amex"       className={iconClass('amex')} />
       </div>
 
-      {/* Número de tarjeta */}
       <div>
         <label className="block text-sm font-medium mb-1">Número de tarjeta</label>
         <input
@@ -119,7 +131,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
         {errors.cardNumber && <p className="text-red-500 text-xs mt-1">{errors.cardNumber.message}</p>}
       </div>
 
-      {/* Mes, Año, CVC */}
       <div className="grid grid-cols-3 gap-4">
         {['expMonth','expYear','cvc'].map((field, i) => (
           <div key={field}>
@@ -128,7 +139,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
             </label>
             <input
               type="text"
-              maxLength={field==='cvc'?4:2}
+              maxLength={field === 'cvc' ? 4 : 2}
               {...register(field as keyof FormData)}
               className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
             />
@@ -141,14 +152,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
         ))}
       </div>
 
-      {/* Nombre, Dirección, Email */}
       {(['name','address','email'] as (keyof FormData)[]).map(key => (
         <div key={key}>
           <label className="block text-sm font-medium mb-1">
             {key === 'name' ? 'Nombre en tarjeta' : key === 'address' ? 'Dirección' : 'Correo electrónico'}
           </label>
           <input
-            type={key==='email'?'email':'text'}
+            type={key === 'email' ? 'email' : 'text'}
             {...register(key)}
             className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
@@ -179,4 +189,3 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onBack, onNext }) => {
 }
 
 export default PaymentForm
-  

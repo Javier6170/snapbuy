@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateTransactionDto } from './create-transaction.dto';
+import { CreateGeneralTransactionDto } from './create-general-transaction.dto';
 
-export class InternalCreateTransactionDto extends CreateTransactionDto {
+export class InternalCreateTransactionDto extends CreateGeneralTransactionDto  {
   @ApiProperty({
     description: 'Estado inicial de la transacción',
     enum: ['PENDING', 'APPROVED', 'FAILED'],

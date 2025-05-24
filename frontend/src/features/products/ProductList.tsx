@@ -48,29 +48,33 @@ const ProductList: React.FC = () => {
         {products.map(product => (
           <div
             key={product.id}
-            className="bg-white rounded-2xl shadow hover:shadow-xl transform hover:-translate-y-1 transition cursor-pointer overflow-hidden flex flex-col"
+            className="bg-white rounded-2xl shadow hover:shadow-xl transform hover:-translate-y-1 transition cursor-pointer overflow-hidden flex flex-col min-h-[420px]"
             onClick={() => setSelectedProduct(product)}
           >
-            {/* Imagen */}
-            <div className="aspect-w-1 aspect-h-1 w-full bg-gray-100 overflow-hidden rounded-t-2xl">
-  <img
-    src={product.imageUrl ?? '/placeholder.png'}
-    alt={product.name}
-    className="object-contain w-full h-full"
-  />
-</div>
+            {/* Imagen con relación constante */}
+            <div className="w-full h-48 flex items-center justify-center bg-white border-b">
+              <img
+                src={product.imageUrl ?? '/placeholder.png'}
+                alt={product.name}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
 
-            <div className="p-6 flex-1 flex flex-col">
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">{product.name}</h2>
 
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-lg font-bold text-green-600">
-                  {formatter.format(product.price)}
-                </span>
-                <span className="text-sm text-gray-500">Stock: {product.stock}</span>
+            {/* Contenido */}
+            <div className="p-4 flex flex-col justify-between flex-1">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">{product.name}</h2>
+
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-lg font-bold text-green-600">
+                    {formatter.format(product.price)}
+                  </span>
+                  <span className="text-sm text-gray-500">Stock: {product.stock}</span>
+                </div>
               </div>
 
-              <div className="mt-4 flex items-center space-x-2">
+              <div className="mt-auto flex items-center gap-2">
                 <input
                   type="number"
                   min={1}
