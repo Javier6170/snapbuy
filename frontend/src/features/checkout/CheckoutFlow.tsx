@@ -13,6 +13,11 @@ import { setCheckoutStep } from './checkoutSlice'
 import { clearCart } from '../cart/cartSlice'
 
 const labels = ['Carrito', 'Entrega', 'Pago', 'Resultado']
+const currencyFormatter = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  minimumFractionDigits: 0,
+});
 
 const CheckoutFlow: React.FC = () => {
   const dispatch  = useDispatch()
@@ -61,7 +66,7 @@ const CheckoutFlow: React.FC = () => {
               <div className="flex-1">
                 <h3 className="font-semibold">{product.name}</h3>
                 <p className="text-sm text-gray-600">
-                  ${(product.price / 100).toFixed(2)} × {quantity}
+                  { currencyFormatter.format(product.price)} × {quantity}
                 </p>
               </div>
             </div>

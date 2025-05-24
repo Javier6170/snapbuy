@@ -1,11 +1,16 @@
-import { 
-  IsUUID, 
-  IsEmail, 
-  IsInt, 
-  Min, 
-  IsString 
+// src/payments/dto/create-payment.dto.ts
+import {
+  IsUUID,
+  IsEmail,
+  IsInt,
+  Min,
+  IsString,
+  ValidateNested,
+  ArrayNotEmpty,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { ProductOrderDto } from './product-order.dto';
 
 export class CreatePaymentDto {
   @ApiProperty({
@@ -17,12 +22,13 @@ export class CreatePaymentDto {
   customerId: string;
 
   @ApiProperty({
-    description: 'ID del producto que se va a comprar',
-    format: 'uuid',
-    example: 'd6edb7f2-9bf5-437f-a0bc-483dc9b40bf3',
+    description: 'Lista de productos a comprar con sus cantidades',
+    type: [ProductOrderDto],
   })
-  @IsUUID()
-  productId: string;
+  @ValidateNested({ each: true })
+  @Type(() => ProductOrderDto)
+  @ArrayNotEmpty()
+  products: ProductOrderDto[];
 
   @ApiProperty({
     description: 'Correo electrónico del cliente',
@@ -31,16 +37,6 @@ export class CreatePaymentDto {
   })
   @IsEmail()
   customerEmail: string;
-
-  @ApiProperty({
-    description: 'Cantidad de unidades pedidas',
-    type: 'integer',
-    minimum: 1,
-    example: 2,
-  })
-  @IsInt()
-  @Min(1)
-  quantity: number;
 
   @ApiProperty({
     description: 'Monto total en centavos (COP)',

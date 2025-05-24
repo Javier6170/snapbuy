@@ -1,5 +1,10 @@
-
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn
+} from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity()
@@ -12,25 +17,11 @@ export class Transaction {
   id: string;
 
   @ApiProperty({
-    description: 'ID del producto asociado a la transacción',
-    example: 'd6edb7f2-9bf5-437f-a0bc-483dc9b40bf3',
-  })
-  @Column()
-  productId: string;
-
-  @ApiProperty({
     description: 'ID del cliente que realiza la transacción',
     example: '2b29d781-b4a4-419c-a2c5-96ddc444dd20',
   })
   @Column()
   customerId: string;
-
-  @ApiProperty({
-    description: 'Cantidad de unidades del producto',
-    example: 2,
-  })
-  @Column('int')
-  quantity: number;
 
   @ApiProperty({
     description: 'Estado de la transacción',
