@@ -102,7 +102,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext }) => {
                 : 'bg-gray-300 cursor-not-allowed'
             }`}
           >
-            Continuar al formulario de entrega
+            Contuinar pago con tarjeta de credito
           </button>
         </>
       )}

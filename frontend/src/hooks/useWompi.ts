@@ -1,13 +1,13 @@
+// src/hooks/useWompi.ts
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import {
   startTransaction,
   setTransactionSuccess,
   setTransactionFailed,
 } from '../features/transaction/transactionSlice';
 
-interface UsePaymentInput {
+export interface UsePaymentInput {
   cardNumber: string;
   expMonth: string;
   expYear: string;
@@ -20,11 +20,13 @@ interface UsePaymentInput {
     productId: string;
     quantity: number;
   }>;
+  documentType: string;
+  documentNumber: string;
+  installments: number;
 }
 
 export const usePayment = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,38 +37,51 @@ export const usePayment = () => {
       dispatch(startTransaction());
 
       // 1) Crear cliente
-      const customerRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/customers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.name,
-          address: data.address,
-          email: data.email,
-        }),
-      });
-
+      const customerRes = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/customers`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: data.name,
+            address: data.address,
+            email: data.email,
+            // si tu backend acepta, puedes enviar también:
+            documentType: data.documentType,
+            documentNumber: data.documentNumber,
+          }),
+        }
+      );
       const customer = await customerRes.json();
 
       // 2) Hacer pago completo desde backend
-      const paymentRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/payments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: customer.id,
-          customerEmail: data.email,
-          amountInCents: data.amountInCents,
+      const paymentRes = await fetch(
+        `${process.env.REACT_APP_BACKEND_URL}/payments`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerId: customer.id,
+            customerEmail: data.email,
+            amountInCents: data.amountInCents,
 
-          // Datos de tarjeta
-          cardNumber: data.cardNumber,
-          cvc: data.cvc,
-          expMonth: data.expMonth,
-          expYear: data.expYear,
-          name: data.name,
+            // Datos de tarjeta
+            cardNumber: data.cardNumber,
+            cvc: data.cvc,
+            expMonth: data.expMonth,
+            expYear: data.expYear,
+            name: data.name,
 
-          // Lista de productos
-          products: data.products,
-        }),
-      });
+            // Datos de documento y cuotas
+            documentType: data.documentType,
+            documentNumber: data.documentNumber,
+            installments: data.installments,
+
+            // Lista de productos
+            products: data.products,
+          }),
+        }
+      );
 
       if (!paymentRes.ok) {
         const errBody = await paymentRes.json();

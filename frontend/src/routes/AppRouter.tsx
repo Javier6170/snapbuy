@@ -1,9 +1,16 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Header       from '../components/Header'
-import ProductList  from '../features/products/ProductList'
-import CheckoutFlow from '../features/checkout/CheckoutFlow'
-import Footer       from '../components/Footer'
+// src/AppRouter.tsx
+import React, { lazy } from 'react'
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom'
+import Header from '../components/Header'
+
+const ProductList = lazy(() => import('../features/products/ProductList'))
+const CheckoutFlow = lazy(() => import('../features/checkout/CheckoutFlow'))
+
 
 const AppRouter: React.FC = () => (
   <BrowserRouter>
@@ -15,7 +22,6 @@ const AppRouter: React.FC = () => (
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
 
-    <Footer />
   </BrowserRouter>
 
 )

@@ -15,12 +15,12 @@ import { clearCart } from '../cart/cartSlice'
 const labels = ['Carrito', 'Entrega', 'Pago', 'Resultado']
 
 const CheckoutFlow: React.FC = () => {
-  const dispatch  = useDispatch()
-  const navigate  = useNavigate()
-  const step      = useSelector((s: RootState) => s.checkout.step)
-  const cartItems = useSelector((s: RootState) => s.cart.items)
-  const products  = useSelector((s: RootState) => s.products.items)
-  const [showDetailFor, setShowDetailFor] = useState<string|null>(null)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const step = useSelector((state: RootState) => state.checkout.step)
+  const cartItems = useSelector((state: RootState) => state.cart.items) as Array<{ productId: string; quantity: number }>
+  const products = useSelector((state: RootState) => state.products.items)
+  const [showDetailFor, setShowDetailFor] = useState<string | null>(null)
   const [mobileOpen, setMobileOpen] = useState(step === 1)
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const CheckoutFlow: React.FC = () => {
       dispatch(setCheckoutStep(1))
       navigate('/', { replace: true })
     }
-  }, [cartItems, step, dispatch, navigate])
+  }, [cartItems.length, step, dispatch, navigate])
 
   useEffect(() => {
     setMobileOpen(step === 1)
@@ -43,22 +43,17 @@ const CheckoutFlow: React.FC = () => {
     navigate('/', { replace: true })
   }
 
-  // Solo pasos 2 y 3 usan grid de dos columnas en desktop
   const splitDesktop = step === 2 || step === 3
 
   return (
-    <section
-      className={`max-w-7xl mx-auto my-8 p-4 ${
-        splitDesktop ? 'lg:grid lg:grid-cols-2 gap-8' : ''
-      }`}
-    >
-      {/* === Columna Izq: Stepper + Detalle + Resumen/Acordeón === */}
-      <div className={`${splitDesktop ? 'lg:sticky lg:top-6 lg:h-[calc(100vh-64px)] lg:overflow-auto' : ''}`}>
+    <section className={`max-w-7xl mx-auto mt-8 p-4 ${splitDesktop ? 'lg:grid lg:grid-cols-2 gap-8' : ''}`}>
+      {/* Left Column: Stepper + Summary */}
+      <div className={splitDesktop ? 'lg:sticky lg:top-6' : ''}>
         <Stepper steps={labels} current={step - 1} />
 
-        {/* Mini-lista de productos */}
         <div className="space-y-4 mt-6 mb-6">
-          {cartItems.map(({ productId, quantity }) => {
+          {cartItems.map(item => {
+            const { productId, quantity } = item
             const product = products.find(p => p.id === productId)!
             return (
               <div key={productId} className="flex items-center gap-4">
@@ -88,7 +83,7 @@ const CheckoutFlow: React.FC = () => {
           />
         )}
 
-        {/* === Móvil: acordeón sólo en pasos 2 y 3 === */}
+        {/* Mobile summary accordion */}
         <div className="lg:hidden">
           {step >= 2 && step <= 3 && (
             <button
@@ -99,16 +94,12 @@ const CheckoutFlow: React.FC = () => {
               <span className="text-xl">{mobileOpen ? '−' : '+'}</span>
             </button>
           )}
-          {(step === 1 || mobileOpen) && (
-            <CartSummary onNext={() => goTo(step + 1)} />
-          )}
+          {(step === 1 || mobileOpen) && <CartSummary onNext={() => goTo(step + 1)} />}
         </div>
 
-        {/* === Desktop: siempre visible en pasos 2 y 3; paso 1 no usa grid así que se expande === */}
+        {/* Desktop summary */}
         <div className="hidden lg:block">
-          {step >= 1 && step <= 3 && (
-            <CartSummary onNext={() => goTo(step + 1)} />
-          )}
+          {step >= 1 && step <= 3 && <CartSummary onNext={() => goTo(step + 1)} />}
           {step === 4 && (
             <div className="mt-8">
               <TransactionResult onRestart={handleRestart} />
@@ -117,7 +108,7 @@ const CheckoutFlow: React.FC = () => {
         </div>
       </div>
 
-      {/* === Columna Der: Formularios en pasos 2 y 3 === */}
+      {/* Right Column: Forms or Result */}
       {step === 2 && (
         <div className="w-full bg-white p-6 rounded-2xl shadow-xl">
           <DeliveryForm onBack={() => goTo(1)} onNext={() => goTo(3)} />
@@ -129,7 +120,6 @@ const CheckoutFlow: React.FC = () => {
         </div>
       )}
 
-      {/* === Paso 4: Resultado en ancho completo === */}
       {!splitDesktop && step === 4 && (
         <div className="w-full mt-4">
           <TransactionResult onRestart={handleRestart} />

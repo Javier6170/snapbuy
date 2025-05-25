@@ -46,6 +46,15 @@ export class Transaction {
   @Column({ nullable: true })
   reference: string;
 
+  @Column()
+  documentType: string;
+
+  @Column()
+  documentNumber: string;
+
+  @Column({ type: 'int', default: 1 })
+  installments: number;
+
   @ApiProperty({
     description: 'Fecha de creación de la transacción',
     example: '2025-05-23T16:20:20.819Z',

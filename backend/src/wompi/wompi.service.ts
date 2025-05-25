@@ -125,79 +125,73 @@ export class WompiService {
     }
   }
 
-  async payWithCard(options: {
-    amountInCents: number;
-    customerEmail: string;
-    reference: string;
-    token: string;
-    installments: number;
-  }): Promise<any> {
-    const {
-      amountInCents,
-      customerEmail,
-      reference,
+  // src/wompi/wompi.service.ts
+async payWithCard(options: {
+  amountInCents: number;
+  customerEmail: string;
+  reference: string;
+  token: string;
+  installments: number;
+  // añadimos deliveryInfo
+  deliveryInfo?: {
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    phone?: string;
+  };
+}): Promise<any> {
+  const {
+    amountInCents,
+    customerEmail,
+    reference,
+    token,
+    installments,
+    deliveryInfo,
+  } = options;
+
+  const acceptanceToken = await this.getAcceptanceToken();
+  const rawSignature = `${reference}${amountInCents}COP${this.integrityKey}`;
+  const signature = crypto.createHash('sha256').update(rawSignature).digest('hex');
+
+  const payload: any = {
+    amount_in_cents: amountInCents,
+    currency: 'COP',
+    customer_email: customerEmail,
+    reference,
+    redirect_url: 'https://fake-return.com',
+    acceptance_token: acceptanceToken,
+    signature,
+    payment_method: {
+      type: 'CARD',
       token,
       installments,
-    } = options;
+      shipping_data: deliveryInfo,
+    },
+    // metadata siempre funciona:
+    metadata: {
+      delivery_address: deliveryInfo?.addressLine1,
+      delivery_city:    deliveryInfo?.city,
+      delivery_state:   deliveryInfo?.state,
+      delivery_zip:     deliveryInfo?.postalCode,
+      delivery_country: deliveryInfo?.country,
+    },
+  };
 
-    const acceptanceToken = await this.getAcceptanceToken();
-
-    const rawSignature = `${reference}${amountInCents}COP${this.integrityKey}`;
-    const signature = crypto
-      .createHash('sha256')
-      .update(rawSignature)
-      .digest('hex');
-    this.logger.log(`Firma SHA256 generada: ${signature}`);
-
-    const payload = {
-      amount_in_cents: amountInCents,
-      currency: 'COP',
-      customer_email: customerEmail,
-      reference,
-      redirect_url: 'https://fake-return.com',
-      acceptance_token: acceptanceToken,
-      signature,
-      payment_method: {
-        type: 'CARD',
-        token,
-        installments,
+  this.logger.debug(`Payload: ${JSON.stringify(payload)}`);
+  const response = await firstValueFrom(
+    this.httpService.post(`${this.apiUrl}/transactions`, payload, {
+      headers: {
+        Authorization: `Bearer ${this.privateKey}`,
+        'Content-Type': 'application/json',
       },
-    };
+    }),
+  );
+  return response.data;
+}
 
-    this.logger.log(`Enviando transacción a Wompi`);
-    this.logger.debug(`Payload: ${JSON.stringify(payload)}`);
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          `${this.apiUrl}/transactions`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${this.privateKey}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
-      return response.data;
-    } catch (err: any) {
-      const status =
-        err.response?.status || HttpStatus.BAD_REQUEST;
-      const details = err.response?.data || err.message;
-      this.logger.error(
-        `Error al crear la transacción:`,
-        details,
-      );
-      throw new HttpException(
-        {
-          message: 'No se pudo procesar el pago con Wompi',
-          details,
-        },
-        status,
-      );
-    }
-  }
 
   async getTransactionStatus(
     transactionId: string,
