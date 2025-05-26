@@ -11,13 +11,9 @@ async function bootstrap() {
 
   // 2. Configurar CORS para el frontend React
   app.enableCors({
-    origin: ['http://localhost:3000'],
+    origin: ['*'],
     credentials: true,
   });
-
-  // 3. Validaciones globales: 
-  //    - whitelist: elimina cualquier propiedad no decorada en los DTOs
-  //    - forbidNonWhitelisted: arroja error si llegan propiedades extra
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })
   );
