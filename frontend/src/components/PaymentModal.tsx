@@ -47,20 +47,7 @@ const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 10 }, (_, i) => (currentYear + i).toString().slice(-2));
 
-// Candado inline SVG
-const LockIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg
-    className={className}
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M12 11c-1.657 0-3 .895-3 2v2h6v-2c0-1.105-1.343-2-3-2z
-         M16 11V7a4 4 0 10-8 0v4" />
-  </svg>
-);
+
 
 // Overlay de carga
 const LoadingOverlay: React.FC = () => (
@@ -78,6 +65,29 @@ const LoadingOverlay: React.FC = () => (
 const PaymentModal: React.FC<{ onBack: () => void; onNext: () => void }> = ({ onBack, onNext }) => {
   const { handlePayment, loading } = usePayment();
   const customer = useSelector((s: RootState) => s.customer);
+  const {
+    address1,
+    address2,
+    city,
+    state: region,
+    postalCode,
+    country,
+    phone,
+    email,
+    firstName,
+    lastName,
+  } = customer;
+
+  const deliveryInfo = {
+    addressLine1: address1,
+    addressLine2: address2,
+    city,
+    state: region,
+    postalCode: postalCode || '',
+    country,
+    phone,
+  };
+
   const cartItems = useSelector((s: RootState) => s.cart.items);
   const products = useSelector((s: RootState) => s.products.items);
 
@@ -143,6 +153,7 @@ const PaymentModal: React.FC<{ onBack: () => void; onNext: () => void }> = ({ on
       documentType: data.idType,
       documentNumber: data.idNumber,
       installments: Number(data.installments),
+      deliveryInfo,
     }).finally(onNext);
 
   const iconClass = (ic: string) =>

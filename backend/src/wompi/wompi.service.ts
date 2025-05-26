@@ -4,6 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
+import { DeliveryInfoDto } from '../deliveries/dto/delivery-info.dto';
 
 @Injectable()
 export class WompiService {
@@ -132,16 +133,7 @@ async payWithCard(options: {
   reference: string;
   token: string;
   installments: number;
-  // añadimos deliveryInfo
-  deliveryInfo?: {
-    addressLine1: string;
-    addressLine2?: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-    phone?: string;
-  };
+  deliveryInfo?: DeliveryInfoDto
 }): Promise<any> {
   const {
     amountInCents,
@@ -165,11 +157,20 @@ async payWithCard(options: {
     acceptance_token: acceptanceToken,
     signature,
     payment_method: {
-      type: 'CARD',
-      token,
-      installments,
-      shipping_data: deliveryInfo,
-    },
+    type: 'CARD',
+    token,
+    installments,
+  },
+  shipping_data: {
+    addressLine1: deliveryInfo?.addressLine1,
+    addressLine2: deliveryInfo?.addressLine2,
+    city:         deliveryInfo?.city,
+    state:        deliveryInfo?.state,
+    postal_code:  deliveryInfo?.postalCode,
+    country:      deliveryInfo?.country,
+    phone:        deliveryInfo?.phone,
+  },
+
     // metadata siempre funciona:
     metadata: {
       delivery_address: deliveryInfo?.addressLine1,

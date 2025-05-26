@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { DeliveryInfoDto } from '../dto/delivery-info.dto';
 
 export enum DeliveryStatus {
   PENDING   = 'PENDING',
@@ -48,21 +49,13 @@ export class Delivery {
   })
   status: DeliveryStatus;
 
-  @ApiPropertyOptional({
+ @ApiPropertyOptional({
     description: 'Información de envío (dirección, teléfono, etc.)',
-    type: Object,
+    type: DeliveryInfoDto,
     nullable: true,
   })
   @Column({ type: 'simple-json', nullable: true })
-  deliveryInfo?: {
-    addressLine1: string;
-    addressLine2?: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    country: string;
-    phone?: string;
-  };
+  deliveryInfo?: DeliveryInfoDto;
 
   @ApiPropertyOptional({ description: 'Fecha de creación', type: String, format: 'date-time' })
   @CreateDateColumn()

@@ -7,6 +7,16 @@ import {
   setTransactionFailed,
 } from '../features/transaction/transactionSlice';
 
+export interface DeliveryInfo {
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone?: string;
+}
+
 export interface UsePaymentInput {
   cardNumber: string;
   expMonth: string;
@@ -23,6 +33,7 @@ export interface UsePaymentInput {
   documentType: string;
   documentNumber: string;
   installments: number;
+  deliveryInfo: DeliveryInfo;
 }
 
 export const usePayment = () => {
@@ -46,7 +57,6 @@ export const usePayment = () => {
             name: data.name,
             address: data.address,
             email: data.email,
-            // si tu backend acepta, puedes enviar también:
             documentType: data.documentType,
             documentNumber: data.documentNumber,
           }),
@@ -54,7 +64,6 @@ export const usePayment = () => {
       );
       const customer = await customerRes.json();
 
-      // 2) Hacer pago completo desde backend
       const paymentRes = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/payments`,
         {
@@ -65,20 +74,18 @@ export const usePayment = () => {
             customerEmail: data.email,
             amountInCents: data.amountInCents,
 
-            // Datos de tarjeta
             cardNumber: data.cardNumber,
             cvc: data.cvc,
             expMonth: data.expMonth,
             expYear: data.expYear,
             name: data.name,
 
-            // Datos de documento y cuotas
             documentType: data.documentType,
             documentNumber: data.documentNumber,
             installments: data.installments,
 
-            // Lista de productos
             products: data.products,
+            deliveryInfo: data.deliveryInfo,
           }),
         }
       );

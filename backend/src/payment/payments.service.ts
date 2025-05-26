@@ -44,6 +44,7 @@ export class PaymentsService {
         reference,
         token,
         installments: dto.installments,
+        deliveryInfo: dto.deliveryInfo
       });
 
       // 4. Si queda PENDING, esperar y volver a consultar
@@ -65,6 +66,7 @@ export class PaymentsService {
             customerId:    dto.customerId,
             productId:     item.productId,
             quantity:      item.quantity,
+            deliveryInfo:  dto.deliveryInfo
           });
           await this.products.updateStock(item.productId, item.quantity);
         }

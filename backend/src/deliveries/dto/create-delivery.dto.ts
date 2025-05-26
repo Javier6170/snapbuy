@@ -1,6 +1,8 @@
 // src/deliveries/dto/create-delivery.dto.ts
-import { IsUUID, IsInt, Min } from 'class-validator';
+import { IsUUID, IsInt, Min, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { DeliveryInfoDto } from './delivery-info.dto';
+import { Type } from 'class-transformer';
 
 export class CreateDeliveryDto {
   @ApiProperty({ description: 'UUID de la transacción asociada' })
@@ -14,4 +16,9 @@ export class CreateDeliveryDto {
 
   @ApiProperty({ description: 'Cantidad a entregar', minimum: 1 })
   @IsInt() @Min(1) quantity: number;
+
+  @ApiProperty({ description: 'Información de envío', type: DeliveryInfoDto })
+  @ValidateNested()
+  @Type(() => DeliveryInfoDto)
+  deliveryInfo: DeliveryInfoDto;
 }
