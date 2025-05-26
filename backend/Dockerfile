@@ -1,28 +1,32 @@
-# backend/Dockerfile (context = .)
+# backend/Dockerfile
 
-# 1) Build
+# 1) Build stage
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Quitar "backend/" de los COPY
-COPY backend/package*.json ./
+# Copiamos sólo package.json y lock para acelerar cache
+COPY package*.json ./
 RUN npm ci
 
-COPY backend/ ./
+# Copiamos el resto del código y compilamos
+COPY . .
 RUN npm run build
 
-# 2) Runner
+# 2) Production stage
 FROM node:18-alpine AS runner
 WORKDIR /app
 
-COPY backend/package*.json ./
+# Instalamos sólo dependencias de producción
+COPY package*.json ./
 RUN npm ci --omit=dev
 
+# Traemos el código compilado
 COPY --from=builder /app/dist ./dist
-COPY backend/.env.sample .env
 
+# Puerto que usará Railway (por defecto 4000)
 ARG PORT=4000
 ENV PORT=${PORT}
 EXPOSE ${PORT}
 
+# Arrancamos la app
 CMD ["node", "dist/main.js"]
