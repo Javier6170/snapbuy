@@ -19,7 +19,7 @@ COPY backend/package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
-COPY backend/.env.example .env
+COPY backend/.env.sample .env
 
 ARG PORT=4000
 ENV PORT=${PORT}
