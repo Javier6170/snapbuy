@@ -1,13 +1,14 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 const ormconfig: TypeOrmModuleOptions = {
-  type: 'postgres',
-  host: "localhost",
-  port: 5432,
-  username: "snapbuy_user",
-  password: "79Fmf31sMccSx6jPkquL.k0KR211wuipZrGl7Ql",
-  database: "snapbuy",
+  type: process.env.DB_TYPE as 'postgres', 
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   entities: ['dist/**/*.entity.js'],
-  synchronize: true, // solo en dev
+  synchronize: process.env.DB_SYNCHRONIZE === 'true', 
 };
+
 export default ormconfig;
