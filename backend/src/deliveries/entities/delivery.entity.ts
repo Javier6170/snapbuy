@@ -1,29 +1,67 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { DeliveryInfoDto } from '../dto/delivery-info.dto';
 
-@Entity()
+export enum DeliveryStatus {
+  PENDING   = 'PENDING',
+  SHIPPED   = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELED  = 'CANCELED',
+}
+
+@Entity({ name: 'deliveries' })
 export class Delivery {
-  @ApiProperty({ description: 'UUID de la entrega' })
+  @ApiPropertyOptional({ description: 'UUID de la entrega' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ApiProperty({ description: 'ID de la transacción asociada' })
+  @ApiPropertyOptional({ description: 'UUID de la transacción asociada' })
   @Column()
   transactionId: string;
 
-  @ApiProperty({ description: 'UUID del cliente que recibe la entrega' })
+  @ApiPropertyOptional({ description: 'UUID del cliente que recibe la entrega' })
   @Column()
   customerId: string;
 
-  @ApiProperty({ description: 'UUID del producto a entregar' })
+  @ApiPropertyOptional({ description: 'UUID del producto a entregar' })
   @Column()
   productId: string;
 
-  @ApiProperty({ description: 'Cantidad de unidades a entregar', example: 1 })
+  @ApiPropertyOptional({ description: 'Cantidad de unidades a entregar', example: 1 })
   @Column('int')
   quantity: number;
 
-  @ApiProperty({ description: 'Fecha de creación de la entrega', type: String, format: 'date-time' })
+  @ApiPropertyOptional({
+    description: 'Estado de la entrega',
+    enum: DeliveryStatus,
+    default: DeliveryStatus.PENDING,
+  })
+  @Column({
+    type: 'enum',
+    enum: DeliveryStatus,
+    default: DeliveryStatus.PENDING,
+  })
+  status: DeliveryStatus;
+
+ @ApiPropertyOptional({
+    description: 'Información de envío (dirección, teléfono, etc.)',
+    type: DeliveryInfoDto,
+    nullable: true,
+  })
+  @Column({ type: 'simple-json', nullable: true })
+  deliveryInfo?: DeliveryInfoDto;
+
+  @ApiPropertyOptional({ description: 'Fecha de creación', type: String, format: 'date-time' })
   @CreateDateColumn()
   createdAt: Date;
+
+  @ApiPropertyOptional({ description: 'Fecha de última actualización', type: String, format: 'date-time' })
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

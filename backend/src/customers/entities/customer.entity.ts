@@ -6,4 +6,6 @@ export class Customer {
   @Column() name: string;
   @Column() address: string;
   @Column() email: string;
+  @Column() documentNumber: string;
+  @Column() documentType: string;
 }

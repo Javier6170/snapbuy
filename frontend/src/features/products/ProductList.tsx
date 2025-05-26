@@ -1,116 +1,83 @@
 // src/features/products/ProductList.tsx
-import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import React, { useState } from 'react'
 import { useAppDispatch } from '../../hooks/useAppDispatch'
-import { loadProducts } from './productSlice'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import type { RootState } from '../../app/store'
-import type { Product } from './productSlice'
+import { useProducts } from '../../hooks/useProducts'
 import { addToCart } from '../cart/cartSlice'
+import { updateStock, Product } from './productSlice'
 import ProductDetailModal from './ProductDetailModal'
-
-const formatter = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  minimumFractionDigits: 2,
-})
+import { ProductGrid } from './ProductGrid'
 
 const ProductList: React.FC = () => {
   const dispatch = useAppDispatch()
-  const { items: products, loading, error } = useSelector((state: RootState) => state.products)
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const navigate = useNavigate()
+  const cartCount = useSelector((state: RootState) => state.cart.items.length)
+  const { items: products, loading, error } = useProducts()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  useEffect(() => {
-    dispatch(loadProducts())
-  }, [dispatch])
-
-  const handleQuantityChange = (productId: string, value: number) => {
-    const maxStock = products.find(p => p.id === productId)?.stock ?? 1
-    const qty = Math.max(1, Math.min(value, maxStock))
-    setQuantities(prev => ({ ...prev, [productId]: qty }))
+  const onQuantityChange = (id: string, value: number) => {
+    const max = products.find(p => p.id === id)?.stock ?? 1
+    const qty = Math.max(1, Math.min(value, max))
+    setQuantities(prev => ({ ...prev, [id]: qty }))
   }
 
-  const handleAddToCart = (product: Product) => {
-    const quantity = quantities[product.id] || 1
-    if (quantity <= product.stock) {
-      dispatch(addToCart({ productId: product.id, quantity }))
-    }
+  const onAdd = (product: Product) => {
+    const qty = quantities[product.id] || 1
+    dispatch(addToCart({ productId: product.id, quantity: qty }))
+    dispatch(updateStock({ productId: product.id, quantity: qty }))
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <section className="flex flex-col flex-grow px-4 sm:px-6 lg:px-8 pt-8 pb-20 lg:pt-8 lg:pb-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Nuestros Productos</h1>
 
-      {loading && <p className="text-center text-gray-600">Cargando productos...</p>}
-      {error && <p className="text-center text-red-500">Error al cargar productos: {error}</p>}
-
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map(product => (
-          <div
-            key={product.id}
-            className="bg-white rounded-2xl shadow hover:shadow-xl transform hover:-translate-y-1 transition cursor-pointer overflow-hidden flex flex-col min-h-[420px]"
-            onClick={() => setSelectedProduct(product)}
-          >
-            {/* Imagen con relación constante */}
-            <div className="w-full h-48 flex items-center justify-center bg-white border-b">
-              <img
-                src={product.imageUrl ?? '/placeholder.png'}
-                alt={product.name}
-                className="max-h-full max-w-full object-contain"
-              />
+      {loading && (
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-48 bg-gray-200 mb-4 rounded" />
+              <div className="h-6 bg-gray-200 mb-2 rounded w-3/4" />
+              <div className="h-6 bg-gray-200 rounded w-1/2" />
             </div>
+          ))}
+        </div>
+      )}
 
+      {error && <p className="text-center text-red-500 mt-4">{error}</p>}
 
-            {/* Contenido */}
-            <div className="p-4 flex flex-col justify-between flex-1">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">{product.name}</h2>
-
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-lg font-bold text-green-600">
-                    {formatter.format(product.price)}
-                  </span>
-                  <span className="text-sm text-gray-500">Stock: {product.stock}</span>
-                </div>
-              </div>
-
-              <div className="mt-auto flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  max={product.stock}
-                  value={quantities[product.id] || 1}
-                  onClick={e => e.stopPropagation()}
-                  onChange={e => {
-                    e.stopPropagation()
-                    handleQuantityChange(product.id, parseInt(e.target.value, 10))
-                  }}
-                  className="w-16 px-2 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                />
-                <button
-                  onClick={e => {
-                    e.stopPropagation()
-                    handleAddToCart(product)
-                  }}
-                  disabled={product.stock === 0}
-                  className={`px-4 py-2 rounded-lg font-medium transition ${product.stock === 0
-                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                >
-                  {product.stock === 0 ? 'Agotado' : 'Agregar'}
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {!loading && !error && (
+        <ProductGrid
+          products={products}
+          quantities={quantities}
+          onQuantityChange={onQuantityChange}
+          onAdd={onAdd}
+          onSelect={setSelectedProduct}
+        />
+      )}
 
       {selectedProduct && (
         <ProductDetailModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
         />
+      )}
+
+      {/* Banner fijo en móvil para ir al checkout */}
+      {cartCount > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t p-4 flex justify-between items-center shadow-lg">
+          <span className="font-medium">
+            {cartCount} {cartCount > 1 ? 'artículos' : 'artículo'} en tu carrito
+          </span>
+          <button
+            onClick={() => navigate('/checkout')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+          >
+            Ir a pagar
+          </button>
+        </div>
       )}
     </section>
   )

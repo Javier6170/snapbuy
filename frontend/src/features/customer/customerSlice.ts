@@ -1,27 +1,31 @@
-// features/customer/customerSlice.ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { DeliveryFormData } from '../../utils/validationSchemas'
 
-interface Customer {
-  name: string;
-  address: string;
-  email: string;
+const initialState: DeliveryFormData = {
+  country:       '',
+  firstName:     '',
+  lastName:      '',
+  documentNumber:'',
+  email:'',
+  address1:      '',
+  address2:      undefined,
+  city:          '',
+  state:         '',
+  postalCode:    undefined,
+  phone:         '',
+  saveInfo:      false,
+  sendSmsOffers: false,
 }
-
-const initialState: Customer = {
-  name: '',
-  address: '',
-  email: '',
-};
 
 const customerSlice = createSlice({
   name: 'customer',
   initialState,
   reducers: {
-    setCustomerInfo(state, action: PayloadAction<Customer>) {
-      return action.payload;
+    setCustomerInfo(state, action: PayloadAction<DeliveryFormData>) {
+      return action.payload
     },
   },
-});
+})
 
-export const { setCustomerInfo } = customerSlice.actions;
-export default customerSlice.reducer;
+export const { setCustomerInfo } = customerSlice.actions
+export default customerSlice.reducer

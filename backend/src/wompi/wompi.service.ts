@@ -4,6 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
+import { DeliveryInfoDto } from '../deliveries/dto/delivery-info.dto';
 
 @Injectable()
 export class WompiService {
@@ -125,79 +126,73 @@ export class WompiService {
     }
   }
 
-  async payWithCard(options: {
-    amountInCents: number;
-    customerEmail: string;
-    reference: string;
-    token: string;
-    installments: number;
-  }): Promise<any> {
-    const {
-      amountInCents,
-      customerEmail,
-      reference,
-      token,
-      installments,
-    } = options;
+  // src/wompi/wompi.service.ts
+async payWithCard(options: {
+  amountInCents: number;
+  customerEmail: string;
+  reference: string;
+  token: string;
+  installments: number;
+  deliveryInfo?: DeliveryInfoDto
+}): Promise<any> {
+  const {
+    amountInCents,
+    customerEmail,
+    reference,
+    token,
+    installments,
+    deliveryInfo,
+  } = options;
 
-    const acceptanceToken = await this.getAcceptanceToken();
+  const acceptanceToken = await this.getAcceptanceToken();
+  const rawSignature = `${reference}${amountInCents}COP${this.integrityKey}`;
+  const signature = crypto.createHash('sha256').update(rawSignature).digest('hex');
 
-    const rawSignature = `${reference}${amountInCents}COP${this.integrityKey}`;
-    const signature = crypto
-      .createHash('sha256')
-      .update(rawSignature)
-      .digest('hex');
-    this.logger.log(`Firma SHA256 generada: ${signature}`);
+  const payload: any = {
+    amount_in_cents: amountInCents,
+    currency: 'COP',
+    customer_email: customerEmail,
+    reference,
+    redirect_url: 'https://fake-return.com',
+    acceptance_token: acceptanceToken,
+    signature,
+    payment_method: {
+    type: 'CARD',
+    token,
+    installments,
+  },
+  shipping_data: {
+    addressLine1: deliveryInfo?.addressLine1,
+    addressLine2: deliveryInfo?.addressLine2,
+    city:         deliveryInfo?.city,
+    state:        deliveryInfo?.state,
+    postal_code:  deliveryInfo?.postalCode,
+    country:      deliveryInfo?.country,
+    phone:        deliveryInfo?.phone,
+  },
 
-    const payload = {
-      amount_in_cents: amountInCents,
-      currency: 'COP',
-      customer_email: customerEmail,
-      reference,
-      redirect_url: 'https://fake-return.com',
-      acceptance_token: acceptanceToken,
-      signature,
-      payment_method: {
-        type: 'CARD',
-        token,
-        installments,
+    // metadata siempre funciona:
+    metadata: {
+      delivery_address: deliveryInfo?.addressLine1,
+      delivery_city:    deliveryInfo?.city,
+      delivery_state:   deliveryInfo?.state,
+      delivery_zip:     deliveryInfo?.postalCode,
+      delivery_country: deliveryInfo?.country,
+    },
+  };
+
+  this.logger.debug(`Payload: ${JSON.stringify(payload)}`);
+  const response = await firstValueFrom(
+    this.httpService.post(`${this.apiUrl}/transactions`, payload, {
+      headers: {
+        Authorization: `Bearer ${this.privateKey}`,
+        'Content-Type': 'application/json',
       },
-    };
+    }),
+  );
+  return response.data;
+}
 
-    this.logger.log(`Enviando transacción a Wompi`);
-    this.logger.debug(`Payload: ${JSON.stringify(payload)}`);
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          `${this.apiUrl}/transactions`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${this.privateKey}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
-      return response.data;
-    } catch (err: any) {
-      const status =
-        err.response?.status || HttpStatus.BAD_REQUEST;
-      const details = err.response?.data || err.message;
-      this.logger.error(
-        `Error al crear la transacción:`,
-        details,
-      );
-      throw new HttpException(
-        {
-          message: 'No se pudo procesar el pago con Wompi',
-          details,
-        },
-        status,
-      );
-    }
-  }
 
   async getTransactionStatus(
     transactionId: string,

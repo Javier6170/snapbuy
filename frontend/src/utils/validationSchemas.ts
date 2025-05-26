@@ -1,18 +1,20 @@
 import * as yup from 'yup';
 
 export const deliverySchema = yup.object({
-  name: yup
-    .string()
-    .required('Nombre es obligatorio'),
-  address: yup
-    .string()
-    .required('Dirección es obligatoria'),
-  email: yup
-    .string()
-    .email('Correo inválido')
-    .required('Correo es obligatorio'),
-});
-
+  country:        yup.string().required('País requerido'),
+  firstName:      yup.string().required('Nombre requerido'),
+  lastName:       yup.string().required('Apellido requerido'),
+  documentNumber: yup.string().required('Número de documento'),
+  email: yup.string().required('Correo electronico requerido'),
+  address1:       yup.string().required('Dirección requerida'),
+  address2:       yup.string(), // opcional
+  city:           yup.string().required('Ciudad requerida'),
+  state:          yup.string().required('Provincia/Estado'),
+  postalCode:     yup.string(), // opcional
+  phone:          yup.string().required('Teléfono requerido'),
+  saveInfo:       yup.boolean(),
+  sendSmsOffers:  yup.boolean(),
+}).required();
 
 export const paymentSchema = deliverySchema.concat(
   yup.object({

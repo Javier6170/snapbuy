@@ -1,6 +1,6 @@
 // src/features/customer/DeliveryForm.tsx
 import React from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, SubmitHandler, Resolver } from 'react-hook-form'
 import { useDispatch } from 'react-redux'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { setCustomerInfo } from './customerSlice'
@@ -11,81 +11,155 @@ interface Props {
   onNext(): void
 }
 
+const countries = ['Colombia', 'México', 'España']  // Ajusta a tu lista real
+const states = ['Antioquia', 'Cundinamarca', 'Valle del Cauca']
+
 const DeliveryForm: React.FC<Props> = ({ onBack, onNext }) => {
   const dispatch = useDispatch()
+
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = useForm<DeliveryFormData>({
-    resolver: yupResolver(deliverySchema),
-    mode: 'onTouched'
+    resolver: yupResolver(deliverySchema) as Resolver<DeliveryFormData>,
+    mode: 'onBlur'
   })
 
-  const submit = (data: DeliveryFormData) => {
+  const onSubmit: SubmitHandler<DeliveryFormData> = (data) => {
+    // Despacha todo el objeto DeliveryFormData al slice
     dispatch(setCustomerInfo(data))
     onNext()
   }
 
   return (
-    <div >
-      {/* Título */}
-      <header className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">2. Información de entrega</h2>
-        <p className="text-gray-600 mt-1">
-          Completa los datos para la entrega de tu pedido
-        </p>
-      </header>
+    <div>
+      <h2 className="text-2xl font-bold">2. Información de entrega</h2>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-      <form onSubmit={handleSubmit(submit)} className="space-y-5">
-        {/* Nombre completo */}
+        {/* Correo electrónico */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Nombre completo
-          </label>
-          <input
-            {...register('name')}
-            placeholder="Juan Pérez"
-            className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          {errors.name && (
-            <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
-          )}
-        </div>
-
-        {/* Dirección */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Dirección
-          </label>
-          <input
-            {...register('address')}
-            placeholder="Calle 123 #45-67"
-            className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          {errors.address && (
-            <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
-          )}
-        </div>
-
-        {/* Correo */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Correo electrónico
-          </label>
+          <label className="block text-sm font-medium">Correo electrónico</label>
           <input
             type="email"
             {...register('email')}
             placeholder="correo@ejemplo.com"
-            className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
           />
-          {errors.email && (
-            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-          )}
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
         </div>
 
-        {/* Botones */}
-        <div className="flex justify-between pt-4">
+        {/* País / Región */}
+        <div>
+          <label className="block text-sm font-medium">País / Región</label>
+          <select
+            {...register('country')}
+            className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+          >
+            <option value="">Seleccione</option>
+            {countries.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country.message}</p>}
+        </div>
+
+        {/* Nombre y Apellidos */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Nombre</label>
+            <input
+              {...register('firstName')}
+              placeholder="Juan"
+              className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+            />
+            {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Apellidos</label>
+            <input
+              {...register('lastName')}
+              placeholder="Pérez"
+              className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+            />
+            {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>}
+          </div>
+        </div>
+
+        {/* Documento */}
+        <div>
+          <label className="block text-sm font-medium">No. de Documento</label>
+          <input
+            {...register('documentNumber')}
+            placeholder="123456789"
+            className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+          />
+          {errors.documentNumber && <p className="text-red-500 text-xs mt-1">{errors.documentNumber.message}</p>}
+        </div>
+
+        {/* Dirección */}
+        <div>
+          <label className="block text-sm font-medium">Dirección</label>
+          <input
+            {...register('address1')}
+            placeholder="Calle 123 #45-67"
+            className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+          />
+          {errors.address1 && <p className="text-red-500 text-xs mt-1">{errors.address1.message}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium">Casa, apto, etc. (opcional)</label>
+          <input
+            {...register('address2')}
+            placeholder="Apto 302"
+            className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+          />
+        </div>
+
+        {/* Ciudad / Estado / Código postal */}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium">Ciudad</label>
+            <input
+              {...register('city')}
+              placeholder="Medellín"
+              className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+            />
+            {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Provincia / Estado</label>
+            <select
+              {...register('state')}
+              className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+            >
+              <option value="">Seleccione</option>
+              {states.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Código postal (opcional)</label>
+            <input
+              {...register('postalCode')}
+              placeholder="630001"
+              className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+            />
+          </div>
+        </div>
+
+        {/* Teléfono */}
+        <div>
+          <label className="block text-sm font-medium">Teléfono</label>
+          <input
+            {...register('phone')}
+            placeholder="+57 3001234567"
+            className="mt-1 w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-300"
+          />
+          {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
+        </div>
+
+
+        {/* Botones de navegación */}
+        <div className="flex justify-between pt-6">
           <button
             type="button"
             onClick={onBack}
@@ -95,7 +169,8 @@ const DeliveryForm: React.FC<Props> = ({ onBack, onNext }) => {
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            disabled={isSubmitting}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
             Siguiente →
           </button>

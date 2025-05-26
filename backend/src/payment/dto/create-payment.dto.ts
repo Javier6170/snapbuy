@@ -1,85 +1,57 @@
 // src/payments/dto/create-payment.dto.ts
 import {
-  IsUUID,
-  IsEmail,
-  IsInt,
-  Min,
-  IsString,
-  ValidateNested,
-  ArrayNotEmpty,
+  IsUUID, IsEmail, IsInt, Min, IsString, ValidateNested,
+  ArrayNotEmpty, IsPositive, IsDefined,
+  Length
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ProductOrderDto } from './product-order.dto';
+import { DeliveryInfoDto } from '../../deliveries/dto/delivery-info.dto';
 
 export class CreatePaymentDto {
-  @ApiProperty({
-    description: 'ID del cliente que realiza el pago',
-    format: 'uuid',
-    example: '2b29d781-b4a4-419c-a2c5-96ddc444dd20',
-  })
-  @IsUUID()
-  customerId: string;
+  @ApiProperty({ description: 'UUID del cliente', format: 'uuid' })
+  @IsUUID() customerId: string;
 
-  @ApiProperty({
-    description: 'Lista de productos a comprar con sus cantidades',
-    type: [ProductOrderDto],
-  })
+  @ApiProperty({ description: 'Productos y cantidades', type: [ProductOrderDto] })
   @ValidateNested({ each: true })
   @Type(() => ProductOrderDto)
   @ArrayNotEmpty()
   products: ProductOrderDto[];
 
-  @ApiProperty({
-    description: 'Correo electrónico del cliente',
-    format: 'email',
-    example: 'cliente@ejemplo.com',
-  })
-  @IsEmail()
-  customerEmail: string;
+  @ApiProperty({ description: 'Email de contacto', format: 'email' })
+  @IsEmail() customerEmail: string;
 
-  @ApiProperty({
-    description: 'Monto total en centavos (COP)',
-    type: 'integer',
-    minimum: 100,
-    example: 258000,
-  })
-  @IsInt()
-  @Min(100)
-  amountInCents: number;
+  @ApiProperty({ description: 'Monto total en centavos (COP)', minimum: 100 })
+  @IsInt() @Min(100) amountInCents: number;
 
-  @ApiProperty({
-    description: 'Número de la tarjeta (16 dígitos)',
-    example: '4242424242424242',
-  })
-  @IsString()
-  cardNumber: string;
+  @ApiProperty({ description: 'Número de tarjeta (16 dígitos)' })
+  @IsString() @Length(16, 16) cardNumber: string;
 
-  @ApiProperty({
-    description: 'Código de seguridad CVC (3 dígitos)',
-    example: '123',
-  })
-  @IsString()
-  cvc: string;
+  @ApiProperty({ description: 'CVC (3 o 4 dígitos)' })
+  @IsString() @Length(3, 4) cvc: string;
 
-  @ApiProperty({
-    description: 'Mes de expiración de la tarjeta (MM)',
-    example: '08',
-  })
-  @IsString()
-  expMonth: string;
+  @ApiProperty({ description: 'Mes de expiración (MM)' })
+  @IsString() @Length(2, 2) expMonth: string;
 
-  @ApiProperty({
-    description: 'Año de expiración de la tarjeta (YY)',
-    example: '28',
-  })
-  @IsString()
-  expYear: string;
+  @ApiProperty({ description: 'Año de expiración (YY)' })
+  @IsString() @Length(2, 2) expYear: string;
 
-  @ApiProperty({
-    description: 'Nombre que aparece en la tarjeta',
-    example: 'Juan Pérez',
-  })
-  @IsString()
-  name: string;
+  @ApiProperty({ description: 'Nombre en la tarjeta' })
+  @IsString() name: string;
+
+  @ApiProperty({ description: 'Tipo de documento', example: 'CC' })
+  @IsString() documentType: string;
+
+  @ApiProperty({ description: 'Número de documento' })
+  @IsString() documentNumber: string;
+
+  @ApiProperty({ description: 'Número de cuotas', minimum: 1 })
+  @IsInt() @Min(1) installments: number;
+
+  @ApiProperty({ description: 'Información de entrega', type: DeliveryInfoDto })
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => DeliveryInfoDto)
+  deliveryInfo: DeliveryInfoDto;
 }
