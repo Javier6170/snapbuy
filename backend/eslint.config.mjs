@@ -1,37 +1,36 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
+// eslint.config.mjs
 import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+import pluginPrettier from 'eslint-plugin-prettier';
+import pluginImport from 'eslint-plugin-import';
 
-// Polyfill de __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Compat para compartir configs clásicas
 const compat = new FlatCompat({
-  baseDirectory: __dirname,
+  baseDirectory: process.cwd(),
+  /** aquí le decimos cuál es el config "recommendado" */
+  recommendedConfig: js.configs.recommended,
 });
 
 export default [
-  // Reemplaza todos los "extends" clásicos
-  ...compat.extends(
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:import/recommended',
-    'plugin:prettier/recommended'
-  ),
+  // primero el config de JS de ESLint
+  js.configs.recommended,
+
+  // luego el compat boilerplate que "traduce" antiguos extends
+  ...compat.extends('plugin:@typescript-eslint/recommended', 'prettier'),
 
   {
     languageOptions: {
-      parser: '@typescript-eslint/parser',
+      parser: tsParser,
       parserOptions: {
         project: ['./tsconfig.json'],
         tsconfigRootDir: __dirname,
       },
     },
     plugins: {
-      '@typescript-eslint': '@typescript-eslint/eslint-plugin',
-      import: 'eslint-plugin-import',
-      prettier: 'eslint-plugin-prettier',
+      '@typescript-eslint': tsPlugin,
+      prettier: pluginPrettier,
+      import: pluginImport,
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
@@ -39,7 +38,6 @@ export default [
       '@typescript-eslint/no-unsafe-argument': 'warn',
       'import/order': ['warn', { 'newlines-between': 'always' }],
       quotes: ['error', 'single'],
-      'prettier/prettier': 'error',
     },
   },
 ];
