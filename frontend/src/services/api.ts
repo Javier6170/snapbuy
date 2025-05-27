@@ -1,7 +1,5 @@
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
 export const createTransaction = async (transaction: any) => {
-  const res = await fetch(`${BACKEND_URL}/transactions`, {
+  const res = await fetch(`/transactions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(transaction),
@@ -27,14 +25,14 @@ export const createTransaction = async (transaction: any) => {
 
 
 export const fetchProducts = async () => {
-  const res = await fetch(`${BACKEND_URL}/products`);
+  const res = await fetch(`/api/products`);
   if (!res.ok) throw new Error('No se pudo cargar la lista de productos');
   return res.json();
 };
 
 
 export const updateStock = async (productId: string, quantity: number) => {
-  const res = await fetch(`${BACKEND_URL}/products/${productId}/stock`, {
+  const res = await fetch(`/api/products/${productId}/stock`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ quantity }),
