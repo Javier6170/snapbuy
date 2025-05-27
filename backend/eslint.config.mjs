@@ -5,20 +5,20 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import pluginPrettier from 'eslint-plugin-prettier';
 import pluginImport from 'eslint-plugin-import';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const compat = new FlatCompat({
   baseDirectory: process.cwd(),
-  /** aquí le decimos cuál es el config "recommendado" */
   recommendedConfig: js.configs.recommended,
 });
 
 export default [
-  // primero el config de JS de ESLint
   js.configs.recommended,
-
-  // luego el compat boilerplate que "traduce" antiguos extends
   ...compat.extends('plugin:@typescript-eslint/recommended', 'prettier'),
-
   {
     languageOptions: {
       parser: tsParser,
