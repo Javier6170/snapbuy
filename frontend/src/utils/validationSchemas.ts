@@ -5,7 +5,7 @@ export const deliverySchema = yup.object({
   firstName:      yup.string().required('Nombre requerido'),
   lastName:       yup.string().required('Apellido requerido'),
   documentNumber: yup.string().required('Número de documento'),
-  email: yup.string().required('Correo electronico requerido'),
+  email:          yup.string().required('Correo electronico requerido'),
   address1:       yup.string().required('Dirección requerida'),
   address2:       yup.string(), // opcional
   city:           yup.string().required('Ciudad requerida'),
