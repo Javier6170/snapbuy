@@ -107,5 +107,10 @@ npm run build           # Build production bundle
 
 ---
 
+##  Video
+
 ![Demostración de la app](./video-ejecucion.gif)
 
+##  Model DB 
+
+![Modelado de la base de datos](./model-db.png)
