@@ -1,10 +1,12 @@
 // src/payments/payments.service.ts
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+
 import { WompiService } from '../wompi/wompi.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
 import { TransactionsService } from '../transactions/transactions.service';
 import { DeliveriesService } from '../deliveries/deliveries.service';
 import { ProductsService } from '../products/products.service';
+
+import { CreatePaymentDto } from './dto/create-payment.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -73,6 +75,7 @@ export class PaymentsService {
       }
 
       return { transactionId: transaction.id, status };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       this.logger.error(`Error en processPayment: ${err.message}`, err.stack);
       if (err instanceof HttpException) throw err;

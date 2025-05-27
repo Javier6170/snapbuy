@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { CreateGeneralTransactionDto } from './create-general-transaction.dto';
 
 export class InternalCreateTransactionDto extends CreateGeneralTransactionDto  {

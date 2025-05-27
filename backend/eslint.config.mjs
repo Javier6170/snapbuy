@@ -17,8 +17,13 @@ const compat = new FlatCompat({
 });
 
 export default [
+  // 1) Configuración base de JS
   js.configs.recommended,
+
+  // 2) Compat para TS + Prettier
   ...compat.extends('plugin:@typescript-eslint/recommended', 'prettier'),
+
+  // 3) Reglas Globales
   {
     languageOptions: {
       parser: tsParser,
@@ -33,19 +38,22 @@ export default [
       import: pluginImport,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': 'off',         
-      '@typescript-eslint/no-floating-promises': 'off',   
-      '@typescript-eslint/no-unsafe-argument': 'off',     
+      // Ejemplo: desactiva reglas molestas
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      'import/order': ['warn', { 'newlines-between': 'always' }],
+      quotes: ['error', 'single'],
     },
-    overrides: [
-      {
-        files: ['test/**/*.ts', 'test/**/*.spec.ts'],
-        rules: {
-          '@typescript-eslint/no-floating-promises': 'off',
-          '@typescript-eslint/no-unused-vars': 'off',
-          '@typescript-eslint/no-unsafe-argument': 'off',
-        },
-      },
-    ],
+  },
+
+  // 4) Bloque específico para tests (reemplaza el override)
+  {
+    files: ['test/**/*.ts', 'test/**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+    },
   },
 ];

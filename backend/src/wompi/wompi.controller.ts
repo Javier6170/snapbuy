@@ -1,6 +1,7 @@
+import * as crypto from 'crypto';
+
 import { Controller, Post, Headers, Body, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as crypto from 'crypto';
 import { ApiTags, ApiOperation, ApiHeader, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Wompi Webhooks')
@@ -25,6 +26,7 @@ export class WompiController {
   @ApiResponse({ status: 200, description: 'Evento procesado correctamente', schema: { example: { received: true } } })
   @ApiResponse({ status: 400, description: 'Firma no válida' })
   async handleWebhook(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @Body() body: any,
     @Headers('x-integrity') receivedHash: string,
   ) {

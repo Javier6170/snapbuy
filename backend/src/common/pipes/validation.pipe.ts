@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+ 
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
 // src/common/pipes/validation.pipe.ts
 import { Injectable, PipeTransform, ArgumentMetadata, BadRequestException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
