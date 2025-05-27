@@ -10,11 +10,6 @@ import mastercardLogo from '../assets/mastercard.svg';
 import visaLogo from '../assets/visa.svg';
 import amexLogo from '../assets/americanexpress.svg';
 
-const currencyFormatter = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  minimumFractionDigits: 0,
-})
 
 const BASE_FEE = Number(process.env.REACT_APP_BASE_FEE ?? 3000);
 const DELIVERY_FEE = Number(process.env.REACT_APP_DELIVERY_FEE ?? 5000);
