@@ -17,9 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "deploy": "serverless deploy",
-  "offline": "serverless offline"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -34,6 +32,7 @@
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "serverless-http": "^3.2.0",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.24",
     "uuid": "^11.1.0"
