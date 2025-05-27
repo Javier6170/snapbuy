@@ -49,7 +49,7 @@ export const usePayment = () => {
 
       // 1) Crear cliente
       const customerRes = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/customers`,
+        `/api/customers`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -65,7 +65,7 @@ export const usePayment = () => {
       const customer = await customerRes.json();
 
       const paymentRes = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/payments`,
+        `/api/payments`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
