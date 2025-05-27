@@ -2,16 +2,16 @@ import * as yup from 'yup';
 
 export const deliverySchema = yup.object({
   country:        yup.string().required('País requerido'),
-  firstName:      yup.string().required('Nombre requerido'),
+  firstName:      yup.string().min(1, 'El primer nombre debe tener al menos 1 caracteres').required('Nombre requerido'),
   lastName:       yup.string().required('Apellido requerido'),
-  documentNumber: yup.string().required('Número de documento'),
-  email:          yup.string().required('Correo electronico requerido'),
-  address1:       yup.string().required('Dirección requerida'),
+  documentNumber: yup.string().min(6, 'El numero de document debe tener al menos 6 caracteres').required('Número de documento'),
+  email:          yup.string().email('Formato de correo inválido').required('Correo electronico requerido'),
+  address1:       yup.string().min(5, 'La dirección debe tener al menos 5 caracteres').required('Dirección requerida'),
   address2:       yup.string(), // opcional
   city:           yup.string().required('Ciudad requerida'),
   state:          yup.string().required('Provincia/Estado'),
   postalCode:     yup.string(), // opcional
-  phone:          yup.string().required('Teléfono requerido'),
+  phone:          yup.string().min(10, 'El telefono debe tener al menos 10 caracteres').required('Teléfono requerido'),
   saveInfo:       yup.boolean(),
   sendSmsOffers:  yup.boolean(),
 }).required();
