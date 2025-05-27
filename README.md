@@ -106,3 +106,6 @@ npm run build           # Build production bundle
 ```
 
 ---
+
+![Demostración de la app](./video-ejecucion.gif)
+
