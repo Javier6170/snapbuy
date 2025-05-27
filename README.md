@@ -51,6 +51,10 @@ npm install
 npm run start:dev
 ```
 
+### Documentacion de la API
+
+[Documentacion API](https://snapbuy-backend-production.up.railway.app/docs)
+
 ### Frontend
 
 ```bash
