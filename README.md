@@ -114,6 +114,11 @@ npm run build           # Build production bundle
 ##  Model DB 
 
 ![Modelado de la base de datos](./model-db.png)
+---
+##  Resultado
+
+![Modelado de la base de datos](./resultado-transaccion.png)
+---
 
 ##  Cobertura del backend en Tests
 
