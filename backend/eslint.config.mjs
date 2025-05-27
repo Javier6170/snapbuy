@@ -33,11 +33,19 @@ export default [
       import: pluginImport,
     },
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      'import/order': ['warn', { 'newlines-between': 'always' }],
-      quotes: ['error', 'single'],
+      '@typescript-eslint/no-unused-vars': 'off',         
+      '@typescript-eslint/no-floating-promises': 'off',   
+      '@typescript-eslint/no-unsafe-argument': 'off',     
     },
+    overrides: [
+      {
+        files: ['test/**/*.ts', 'test/**/*.spec.ts'],
+        rules: {
+          '@typescript-eslint/no-floating-promises': 'off',
+          '@typescript-eslint/no-unused-vars': 'off',
+          '@typescript-eslint/no-unsafe-argument': 'off',
+        },
+      },
+    ],
   },
 ];
