@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsUUID, Min } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsUUID, Min } from 'class-validator';
 
 export class CreateGeneralTransactionDto {
   @ApiProperty({ description: 'ID del cliente', example: 'uuid-cliente' })

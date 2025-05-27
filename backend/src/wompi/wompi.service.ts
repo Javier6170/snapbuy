@@ -1,9 +1,11 @@
 // src/wompi/wompi.service.ts
+import * as crypto from 'crypto';
+
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import * as crypto from 'crypto';
+
 import { DeliveryInfoDto } from '../deliveries/dto/delivery-info.dto';
 
 @Injectable()
@@ -55,12 +57,13 @@ export class WompiService {
       }
       this.logger.log(`Acceptance token obtenido: ${token}`);
       return token;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const status =
         err.response?.status || HttpStatus.BAD_GATEWAY;
       const details = err.response?.data || err.message;
       this.logger.error(
-        `Error al obtener acceptance_token:`,
+        'Error al obtener acceptance_token:',
         details,
       );
       throw new HttpException(
@@ -106,6 +109,7 @@ export class WompiService {
       }
       this.logger.log(`Token generado: ${token}`);
       return token;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const status =
         err.response?.status === 422
@@ -113,7 +117,7 @@ export class WompiService {
           : HttpStatus.BAD_REQUEST;
       const details = err.response?.data || err.message;
       this.logger.error(
-        `Error al tokenizar tarjeta:`,
+        'Error al tokenizar tarjeta:',
         details,
       );
       throw new HttpException(
@@ -134,6 +138,7 @@ async payWithCard(options: {
   token: string;
   installments: number;
   deliveryInfo?: DeliveryInfoDto
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): Promise<any> {
   const {
     amountInCents,
@@ -148,6 +153,7 @@ async payWithCard(options: {
   const rawSignature = `${reference}${amountInCents}COP${this.integrityKey}`;
   const signature = crypto.createHash('sha256').update(rawSignature).digest('hex');
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const payload: any = {
     amount_in_cents: amountInCents,
     currency: 'COP',
@@ -211,12 +217,13 @@ async payWithCard(options: {
         ),
       );
       return response.data?.data?.status;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const status =
         err.response?.status || HttpStatus.BAD_GATEWAY;
       const details = err.response?.data || err.message;
       this.logger.error(
-        `Error al consultar estado de transacción:`,
+        'Error al consultar estado de transacción:',
         details,
       );
       throw new HttpException(

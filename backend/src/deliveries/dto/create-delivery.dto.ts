@@ -1,8 +1,9 @@
 // src/deliveries/dto/create-delivery.dto.ts
 import { IsUUID, IsInt, Min, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { DeliveryInfoDto } from './delivery-info.dto';
 import { Type } from 'class-transformer';
+
+import { DeliveryInfoDto } from './delivery-info.dto';
 
 export class CreateDeliveryDto {
   @ApiProperty({ description: 'UUID de la transacción asociada' })

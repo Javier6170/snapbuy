@@ -6,8 +6,10 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ProductOrderDto } from './product-order.dto';
+
 import { DeliveryInfoDto } from '../../deliveries/dto/delivery-info.dto';
+
+import { ProductOrderDto } from './product-order.dto';
 
 export class CreatePaymentDto {
   @ApiProperty({ description: 'UUID del cliente', format: 'uuid' })
