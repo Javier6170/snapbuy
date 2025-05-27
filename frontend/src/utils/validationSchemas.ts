@@ -26,10 +26,12 @@ export const paymentSchema = deliverySchema.concat(
       .string()
       .required('Mes requerido')
       .matches(/^(0[1-9]|1[0-2])$/, 'Mes inválido (01–12)'),
+      
     expYear: yup
       .string()
       .required('Año requerido')
       .matches(/^[0-9]{2}$/, 'Debe tener dos dígitos'),
+
     cvc: yup
       .string()
       .required('CVC requerido')
