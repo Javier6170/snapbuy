@@ -1,15 +1,13 @@
-/* eslint-disable testing-library/no-container */
-// src/components/LoadingOverlay.test.tsx
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LoadingOverlay from './LoadingOverlay';
 
-/* eslint-disable testing-library/no-node-access */
 describe('LoadingOverlay component', () => {
   it('renders the backdrop and inner container with spinner and text', () => {
     const { container } = render(<LoadingOverlay />);
 
-    // 1) El backdrop principal
+    // 1) Backdrop principal (primer div)
+    // eslint-disable-next-line testing-library/no-node-access
     const backdrop = container.firstChild as HTMLElement;
     expect(backdrop).toHaveClass(
       'fixed',
@@ -22,9 +20,10 @@ describe('LoadingOverlay component', () => {
       'justify-center'
     );
 
-    // 2) El contenedor interior
-    // eslint-disable-next-line testing-library/no-container
-    const inner = container.querySelector('div > div') as HTMLElement;
+    // 2) El contenedor interior (div con el texto)
+    const text = screen.getByText('Procesando pago...');
+    // eslint-disable-next-line testing-library/no-node-access
+    const inner = text.closest('div');
     expect(inner).toHaveClass(
       'bg-white',
       'p-4',
@@ -35,11 +34,9 @@ describe('LoadingOverlay component', () => {
       'gap-2'
     );
 
-    // 3) El spinner SVG existe
-    const spinner = container.querySelector('svg');
+    // 3) El spinner SVG existe como hijo del inner
+    // eslint-disable-next-line testing-library/no-node-access
+    const spinner = inner?.querySelector('svg');
     expect(spinner).toBeInTheDocument();
-
-    // 4) El texto aparece correctamente
-    expect(screen.getByText('Procesando pago...')).toBeInTheDocument();
   });
 });
