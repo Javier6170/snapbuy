@@ -36,7 +36,17 @@ const productSlice = createSlice({
       const product = state.items.find(p => p.id === productId)
       if (product && product.stock >= quantity) product.stock -= quantity
     },
+    restoreStock(state, action: PayloadAction<{ productId: string; quantity: number }>) {
+      const { productId, quantity } = action.payload
+      const product = state.items.find(p => p.id === productId)
+      if (product) {
+        product.stock += quantity
+      }
+    }
+
+
   },
+
   extraReducers: builder => {
     builder
       .addCase(loadProducts.pending, state => { state.loading = true; state.error = null })
@@ -45,5 +55,5 @@ const productSlice = createSlice({
   },
 })
 
-export const { updateStock } = productSlice.actions
+export const { updateStock, restoreStock } = productSlice.actions
 export default productSlice.reducer

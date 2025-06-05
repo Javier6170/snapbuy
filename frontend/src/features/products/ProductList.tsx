@@ -13,7 +13,9 @@ import { ProductGrid } from './ProductGrid'
 const ProductList: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const cartCount = useSelector((state: RootState) => state.cart.items.length)
+  const cartCount = useSelector((state: RootState) =>
+  state.cart.items.reduce((total, item) => total + item.quantity, 0)
+);
   const { items: products, loading, error } = useProducts()
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)

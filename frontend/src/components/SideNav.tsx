@@ -3,7 +3,8 @@ import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import type { RootState } from '../app/store'
-import { removeFromCart } from '../features/cart/cartSlice'
+import { decreaseQuantity, updateQuantity, removeItemCompletely } from '../features/cart/cartSlice'
+import { restoreStock } from '../features/products/productSlice'
 
 interface SideNavProps {
   isOpen: boolean
@@ -19,6 +20,8 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const cartItems = useSelector((state: RootState) => state.cart.items)
+
 
   /**
    * Map cart items to products with quantity
@@ -36,9 +39,19 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose }) => {
 
   const total = items.reduce((sum, it) => sum + it.price * it.quantity, 0)
 
-  const handleRemove = (productId: string) => {
-    dispatch(removeFromCart({ productId }))
+  const handleRemoveAll = (productId: string) => {
+    const item = cartItems.find(i => i.productId === productId)
+    if (!item) return
+    dispatch(removeItemCompletely({ productId }))
+    dispatch(restoreStock({ productId, quantity: item.quantity }))
   }
+
+  const handleDecrease = (productId: string) => {
+    dispatch(decreaseQuantity({ productId }))
+    dispatch(restoreStock({ productId, quantity: 1 }))
+  }
+
+
 
   const handleFinalize = () => {
     onClose()
@@ -98,13 +111,21 @@ const SideNav: React.FC<SideNavProps> = ({ isOpen, onClose }) => {
                   <p className="font-semibold">
                     {currencyFormatter.format(it.price * it.quantity)}
                   </p>
-                  <button
-                    onClick={() => handleRemove(it.id)}
-                    className="text-red-500 text-sm hover:underline focus:outline-none"
-                    aria-label={`Eliminar ${it.name} del carrito`}
-                  >
-                    Eliminar
-                  </button>
+                  <div className="flex space-x-2 mt-1">
+                    <button
+                      onClick={() => handleDecrease(it.id)}
+                      className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+                    >
+                      −
+                    </button>
+                    <button
+                      onClick={() => handleRemoveAll(it.id)}
+                      className="text-red-500 text-sm hover:underline focus:outline-none"
+                      aria-label={`Eliminar ${it.name} del carrito`}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               </div>
             ))

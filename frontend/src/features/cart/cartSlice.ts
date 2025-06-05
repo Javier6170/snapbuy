@@ -37,10 +37,19 @@ const cartSlice = createSlice({
       const item = state.items.find(i => i.productId === productId);
       if (item) item.quantity = quantity;
     },
-    // Elimina un producto del carrito
-    removeFromCart(state, action: PayloadAction<{ productId: string }>) {
-      state.items = state.items.filter(i => i.productId !== action.payload.productId);
+    decreaseQuantity(state, action: PayloadAction<{ productId: string }>) {
+      state.items = state.items
+        .map(item =>
+          item.productId === action.payload.productId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter(item => item.quantity > 0)
     },
+    removeItemCompletely(state, action: PayloadAction<{ productId: string }>) {
+      state.items = state.items.filter(i => i.productId !== action.payload.productId)
+    },
+
     // Vacía todo el carrito
     clearCart(state) {
       state.items = [];
@@ -51,8 +60,9 @@ const cartSlice = createSlice({
 export const {
   addToCart,
   updateQuantity,
-  removeFromCart,
+  decreaseQuantity,
   clearCart,
+  removeItemCompletely
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

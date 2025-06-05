@@ -1,6 +1,8 @@
 // src/hooks/useWompi.ts
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useCustomer } from './useCustomerInfo';
+import { usePaymentInfo } from './usePaymentInfo';
 import {
   startTransaction,
   setTransactionSuccess,
@@ -40,6 +42,8 @@ export const usePayment = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { saveCustomer } = useCustomer();
+  const {savePayment } = usePaymentInfo();
 
   const handlePayment = async (data: UsePaymentInput) => {
     try {
@@ -48,47 +52,11 @@ export const usePayment = () => {
       dispatch(startTransaction());
 
       // 1) Crear cliente
-      const customerRes = await fetch(
-        `/api/customers`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: data.name,
-            address: data.address,
-            email: data.email,
-            documentType: data.documentType,
-            documentNumber: data.documentNumber,
-          }),
-        }
-      );
-      const customer = await customerRes.json();
+      const customer = await saveCustomer(data);
+      if (!customer) throw new Error('Error creando el cliente');
 
-      const paymentRes = await fetch(
-        `/api/payments`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customerId: customer.id,
-            customerEmail: data.email,
-            amountInCents: data.amountInCents,
-
-            cardNumber: data.cardNumber,
-            cvc: data.cvc,
-            expMonth: data.expMonth,
-            expYear: data.expYear,
-            name: data.name,
-
-            documentType: data.documentType,
-            documentNumber: data.documentNumber,
-            installments: data.installments,
-
-            products: data.products,
-            deliveryInfo: data.deliveryInfo,
-          }),
-        }
-      );
+      const paymentRes = await savePayment(data, customer);
+      if (!paymentRes ) throw new Error('Error creando la transacción');
 
       if (!paymentRes.ok) {
         const errBody = await paymentRes.json();

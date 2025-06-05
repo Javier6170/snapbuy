@@ -2,7 +2,8 @@
 import cartReducer, {
   addToCart,
   updateQuantity,
-  removeFromCart,
+  removeItemCompletely,
+  
   clearCart,
   CartItem,
 } from './cartSlice';
@@ -49,7 +50,7 @@ describe('cartSlice reducer', () => {
         { productId: 'p2', quantity: 4 },
       ],
     };
-    const action = removeFromCart({ productId: 'p1' });
+    const action = removeItemCompletely({ productId: 'p1' });
     const result = cartReducer(state, action);
     expect(result.items).toEqual([{ productId: 'p2', quantity: 4 }]);
   });
