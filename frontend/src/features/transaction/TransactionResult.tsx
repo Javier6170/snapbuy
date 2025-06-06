@@ -17,7 +17,7 @@ interface Props {
  * Comprobante responsivo de la transacción y detalle de envío.
  */
 const TransactionResult: React.FC<Props> = ({ onRestart }) => {
-  const { transactionId, status: txStatus } = useSelector((s: RootState) => s.transaction)
+  const { transactionId, status: txStatus, message: message } = useSelector((s: RootState) => s.transaction)
   const customer = useSelector((s: RootState) => s.customer)
   const cartItems = useSelector((s: RootState) => s.cart.items)
   const products = useSelector((s: RootState) => s.products.items)
@@ -46,11 +46,17 @@ const TransactionResult: React.FC<Props> = ({ onRestart }) => {
         <p className="text-center mb-4 text-lg">
           Estado: <span className={`font-semibold ${isSuccess ? 'text-green-600' : 'text-red-600'}`}>{statusLabel}</span>
         </p>
-
-        <p className="text-center mb-8 text-sm sm:text-base">
-          ID Transacción:{' '}
-          <code className="bg-gray-100 px-2 py-1 rounded">{transactionId}</code>
+        <p className="text-center mb-4 text-lg">
+          Porque Fallo? <span className='font-bold'> {message}</span>
         </p>
+
+        {transactionId && (
+          <p className="text-center mb-8 text-sm sm:text-base">
+            ID Transacción:{' '}
+            <code className="bg-gray-100 px-2 py-1 rounded">{transactionId}</code>
+          </p>
+        )}
+
 
         <section className="mb-8">
           <h3 className="text-xl sm:text-2xl font-semibold mb-3">Detalle de Artículos</h3>

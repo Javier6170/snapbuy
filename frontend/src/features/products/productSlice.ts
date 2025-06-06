@@ -44,7 +44,6 @@ const productSlice = createSlice({
       }
     }
 
-
   },
 
   extraReducers: builder => {

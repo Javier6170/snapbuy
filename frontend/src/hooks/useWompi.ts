@@ -60,7 +60,7 @@ export const usePayment = () => {
 
       if (!paymentRes.ok) {
         const errBody = await paymentRes.json();
-        const msgs = errBody.details?.error?.messages;
+        const msgs = errBody.error?.details?.error?.messages;
         const userMsg = msgs
           ? Object.values(msgs).flat().join(', ')
           : errBody.message || 'Error desconocido';
@@ -71,6 +71,7 @@ export const usePayment = () => {
       dispatch(setTransactionSuccess({ id: payment.transactionId }));
       return true;
     } catch (err: any) {
+      console.log(err)
       dispatch(setTransactionFailed({ message: err.message }));
       setError(err.message);
       return false;
